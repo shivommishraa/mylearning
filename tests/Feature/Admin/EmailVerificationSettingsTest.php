@@ -1,0 +1,54 @@
+<?php
+
+namespace Tests\Feature\Admin;
+
+use App\Models\SiteSetting;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+
+class EmailVerificationSettingsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_enable_customer_email_verification(): void
+    {
+        $role = Role::create(['name' => 'Admin', 'guard_name' => 'web']);
+        $role->givePermissionTo([
+            Permission::create(['name' => 'settings.view', 'guard_name' => 'web']),
+            Permission::create(['name' => 'settings.edit', 'guard_name' => 'web']),
+        ]);
+        $admin = User::factory()->create();
+        $admin->assignRole($role);
+
+        $this->actingAs($admin)
+            ->get('/admin/settings')
+            ->assertOk()
+            ->assertSee('Require email verification');
+
+        $response = $this->put('/admin/settings', [
+            'business_name' => 'Test Store',
+            'business_type' => 'Grocery Store',
+            'phone' => '1234567890',
+            'email' => 'store@example.com',
+            'address' => 'Main Street',
+            'whatsapp' => '1234567890',
+            'delivery_fee' => '39',
+            'free_delivery_minimum' => '499',
+            'require_email_verification' => '1',
+            'announcement_text' => 'Welcome to the store',
+            'seo_title' => '',
+            'seo_description' => '',
+            'hero_title' => '',
+            'hero_subtitle' => '',
+        ]);
+
+        $response->assertRedirect('/admin/settings');
+        $this->assertDatabaseHas('site_settings', [
+            'key' => 'require_email_verification',
+            'value' => '1',
+        ]);
+    }
+}

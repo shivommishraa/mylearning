@@ -1,0 +1,7 @@
+<div class="form-grid">
+    <div class="admin-field"><label>Link label</label><input name="label" value="{{ old('label',$item?->label) }}" maxlength="80" required></div>
+    <div class="admin-field"><label>Destination</label><input name="url" value="{{ old('url',$item?->url) }}" maxlength="2048" placeholder="/shop or https://example.com" required><small>Use a relative path or secure HTTPS URL.</small></div>
+    <div class="admin-field"><label>Menu</label><select name="location" required><option value="header" @selected(old('location',$item?->location ?? 'header')==='header')>Header</option><option value="footer" @selected(old('location',$item?->location)==='footer')>Footer</option></select></div>
+    <div class="admin-field"><label>Sort order</label><input type="number" min="0" name="sort_order" value="{{ old('sort_order',$item?->sort_order ?? 0) }}"></div>
+    <label class="permission-item"><input type="checkbox" name="is_active" value="1" @checked(old('is_active',$item?->is_active ?? true))> Show this link</label>
+</div>
