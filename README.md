@@ -49,4 +49,4 @@ php artisan test
 npm run build
 ```
 
-In production, use HTTPS, set `APP_DEBUG=false`, configure mail and database credentials, replace the seeded Super Admin password, and run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache` as part of deployment.
+In production, use HTTPS, set `APP_DEBUG=false`, configure mail and database credentials, replace the seeded Super Admin password, and run `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache` as part of deployment. For Apache hosting, point the domain document root to `public/` when possible. If the project root must remain the document root, deploy the root `index.php` and `.htaccess` files; they forward application requests to Laravel and keep private project files from being served directly.
