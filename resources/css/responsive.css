@@ -402,17 +402,109 @@ textarea {
 
     .shop-layout {
         grid-template-columns: minmax(0, 1fr);
-        gap: 18px;
+        gap: 12px;
+    }
+
+    .filters {
+        padding: 0;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(27, 50, 33, .06);
+    }
+
+    .filters-toggle {
+        min-height: 60px;
+        margin: 0;
+        padding: 10px 13px;
+        background: #f7faf6;
+    }
+
+    .filters-content {
+        padding: 0 13px 14px;
+    }
+
+    .filter-group {
+        padding: 12px 0;
+    }
+
+    .filter-category-options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+        max-height: 190px;
+        overflow-y: auto;
+        padding: 2px 2px 2px 0;
+    }
+
+    .filter-category-options .filter-option {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        min-height: 38px;
+        margin: 0;
+        padding: 7px 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: #526057;
+        font-size: 11px;
+        line-height: 1.25;
+    }
+
+    .filter-category-options .filter-option:has(input:checked) {
+        border-color: #9cbea4;
+        background: var(--mint);
+        color: var(--green-dark);
+    }
+
+    .filter-category-options input[type="radio"] {
+        flex: 0 0 auto;
+        width: 14px;
+        height: 14px;
+        accent-color: var(--green);
+    }
+
+    .filter-category-options .filter-option span {
+        overflow-wrap: anywhere;
+    }
+
+    .filter-price-range {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .filters-apply {
+        min-height: 42px;
+        margin-top: 3px;
     }
 
     .shop-toolbar {
-        align-items: stretch;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 13px;
     }
 
-    .shop-toolbar form,
+    .shop-toolbar form {
+        width: auto;
+    }
+
     .shop-toolbar select {
-        width: 100%;
+        max-width: 158px;
+        padding: 8px 25px 8px 9px;
+        font-size: 11px;
+    }
+
+    .shop-result-count {
+        font-size: 11px;
+        line-height: 1.3;
+    }
+
+    .shop-results {
         min-width: 0;
     }
 
