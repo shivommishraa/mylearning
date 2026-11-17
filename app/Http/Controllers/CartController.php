@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Services\CartService;
 use App\Support\StoreCatalogRules;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ class CartController extends Controller
         return view('store.cart', ['summary' => $this->cart->summary()]);
     }
 
-    public function add(Request $request, Product $product): RedirectResponse
+    public function add(Request $request, Product $product): RedirectResponse|JsonResponse
     {
         abort_unless($this->addToCartEnabled(), 403, 'Adding products to the basket is currently disabled.');
 
@@ -40,20 +41,33 @@ class CartController extends Controller
         $cart = Session::get('cart', []);
 
         if (($cart[$product->id] ?? 0) + $quantity > $product->stock) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'There are only '.$product->stock.' available.',
+                ], 422);
+            }
+
             return back()->withErrors(['cart' => 'There are only '.$product->stock.' available.']);
         }
 
         $cart[$product->id] = ($cart[$product->id] ?? 0) + $quantity;
         Session::put('cart', $cart);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $product->name.' added to your basket.',
+                'cart_count' => array_sum($cart),
+            ]);
+        }
+
         return back()->with('success', $product->name.' added to your basket.');
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|JsonResponse
     {
         $quantities = $request->validate([
             'quantities' => ['required', 'array'],
-            'quantities.*' => ['required', 'integer', 'min:0', 'max:99'],
+            'quantities.*' => ['required', 'integer', 'min:1', 'max:99'],
         ])['quantities'];
         $cart = Session::get('cart', []);
 
@@ -70,13 +84,19 @@ class CartController extends Controller
         foreach ($quantities as $id => $quantity) {
             $product = Product::find($id);
 
-            if (! $product || $quantity === 0) {
+            if (! $product) {
                 unset($cart[$id]);
 
                 continue;
             }
 
             if ($quantity > $product->stock) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => "Only {$product->stock} of {$product->name} are available.",
+                    ], 422);
+                }
+
                 return back()->withErrors(['cart' => "Only {$product->stock} of {$product->name} are available."]);
             }
 
@@ -84,6 +104,26 @@ class CartController extends Controller
         }
 
         Session::put('cart', $cart);
+
+        if ($request->expectsJson()) {
+            $summary = $this->cart->summary();
+
+            return response()->json([
+                'message' => 'Basket updated.',
+                'cart_count' => array_sum($cart),
+                'lines' => $summary['lines']->map(fn (array $line) => [
+                    'product_id' => $line['product']->id,
+                    'quantity' => $line['quantity'],
+                    'line_total' => $line['line_total'],
+                ])->values(),
+                'subtotal' => $summary['subtotal'],
+                'coupon' => $summary['coupon']?->code,
+                'discount' => $summary['discount'],
+                'delivery_fee' => $summary['delivery_fee'],
+                'free_delivery_minimum' => $summary['free_delivery_minimum'],
+                'total' => $summary['total'],
+            ]);
+        }
 
         return back()->with('success', 'Basket updated.');
     }

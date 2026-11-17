@@ -132,6 +132,72 @@ class ExampleTest extends TestCase
             ->assertSessionHas('success');
     }
 
+    public function test_product_card_cart_add_returns_product_specific_feedback_without_redirecting(): void
+    {
+        $product = Product::where('is_active', true)->firstOrFail();
+
+        $this->postJson(route('cart.add', $product), ['quantity' => 1])
+            ->assertOk()
+            ->assertJsonPath('message', $product->name.' added to your basket.')
+            ->assertJsonPath('cart_count', 1)
+            ->assertSessionHas('cart', [$product->id => 1]);
+    }
+
+    public function test_cart_quantity_updates_reject_non_positive_values_and_return_recalculated_totals(): void
+    {
+        $product = Product::where('is_active', true)->firstOrFail();
+        $cart = [$product->id => 1];
+        $subtotal = round((float) $product->price * 2, 2);
+        $deliveryFee = $subtotal < (float) SiteSetting::getValue('free_delivery_minimum', 499)
+            ? (float) SiteSetting::getValue('delivery_fee', 39)
+            : 0;
+
+        foreach ([0, -1] as $quantity) {
+            $this->withSession(['cart' => $cart])
+                ->patch(route('cart.update'), [
+                    'quantities' => [$product->id => $quantity],
+                ])
+                ->assertSessionHasErrors(["quantities.{$product->id}"]);
+        }
+
+        $this->withSession(['cart' => $cart])
+            ->patchJson(route('cart.update'), [
+                'quantities' => [$product->id => 2],
+            ])
+            ->assertOk()
+            ->assertJsonPath('cart_count', 2)
+            ->assertJsonPath('lines.0.quantity', 2)
+            ->assertJsonPath('subtotal', $subtotal)
+            ->assertJsonPath('delivery_fee', $deliveryFee)
+            ->assertJsonPath('total', round($subtotal + $deliveryFee, 2));
+    }
+
+    public function test_wishlist_toggle_returns_saved_state_and_renders_highlighted_product(): void
+    {
+        $customer = User::factory()->create(['email_verified_at' => now()]);
+        $product = Product::where('is_active', true)->firstOrFail();
+
+        $this->actingAs($customer)
+            ->postJson(route('wishlist.toggle', $product))
+            ->assertOk()
+            ->assertJsonPath('message', $product->name.' Saved to your wishlist.')
+            ->assertJsonPath('is_wishlisted', true);
+
+        $this->assertDatabaseHas('wishlists', [
+            'user_id' => $customer->id,
+            'product_id' => $product->id,
+        ]);
+        $this->get(route('shop.index'))
+            ->assertOk()
+            ->assertSee('product-wish is-saved')
+            ->assertSee('aria-pressed="true"', false);
+
+        $this->actingAs($customer)
+            ->postJson(route('wishlist.toggle', $product))
+            ->assertOk()
+            ->assertJsonPath('is_wishlisted', false);
+    }
+
     public function test_admin_product_display_settings_are_applied_to_storefront(): void
     {
         $admin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();

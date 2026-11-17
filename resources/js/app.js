@@ -7,6 +7,64 @@ window.Alpine = Alpine;
 
 Alpine.start();
 
+document.addEventListener('submit', async (event) => {
+    const form = event.target.closest('form[data-product-action]');
+
+    if (!form) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const button = form.querySelector('button');
+    const card = form.closest('.product-card');
+    const feedback = card.querySelector('[data-product-feedback]');
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: new FormData(form),
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || Object.values(result.errors || {}).flat()[0] || 'Unable to complete this action.');
+        }
+
+        feedback.textContent = result.message;
+        feedback.hidden = false;
+
+        if (form.dataset.productAction === 'cart') {
+            const cartCount = document.querySelector('.cart-count');
+
+            if (cartCount) {
+                cartCount.textContent = result.cart_count;
+            }
+        } else {
+            const isWishlisted = result.is_wishlisted;
+            button.classList.toggle('is-saved', isWishlisted);
+            button.setAttribute('aria-pressed', String(isWishlisted));
+            button.setAttribute('title', isWishlisted ? 'Remove from wishlist' : 'Save to wishlist');
+            button.setAttribute(
+                'aria-label',
+                `${isWishlisted ? 'Remove' : 'Add'} ${button.closest('.product-card').querySelector('.product-title').textContent} ${isWishlisted ? 'from' : 'to'} wishlist`,
+            );
+        }
+    } catch (error) {
+        feedback.textContent = error.message || 'Unable to complete this action. Please try again.';
+        feedback.hidden = false;
+    } finally {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+    }
+});
+
 const storeMenuButton = document.querySelector('[data-menu-toggle]');
 const storeMenu = document.querySelector('[data-menu]');
 

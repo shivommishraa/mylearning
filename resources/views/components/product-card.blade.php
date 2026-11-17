@@ -8,7 +8,8 @@
         </a>
         @if ($storefrontFeatures['show_product_prices'] && $product->compare_at_price && $product->compare_at_price > $product->price)<span class="product-badge">{{ (int) round((1 - $product->price / $product->compare_at_price) * 100) }}% off</span>@endif
         @auth
-            <form method="POST" action="{{ route('wishlist.toggle', $product) }}">@csrf<button class="product-wish" title="Save to wishlist" aria-label="Add {{ $product->name }} to wishlist">♡</button></form>
+            @php($isWishlisted = auth()->user()->wishlist->contains('id', $product->id))
+            <form method="POST" action="{{ route('wishlist.toggle', $product) }}" data-product-action="wishlist">@csrf<button class="product-wish{{ $isWishlisted ? ' is-saved' : '' }}" title="{{ $isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' }}" aria-label="{{ $isWishlisted ? 'Remove ' : 'Add ' }}{{ $product->name }} {{ $isWishlisted ? 'from' : 'to' }} wishlist" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}">♡</button></form>
         @endauth
     </div>
     <div class="product-info">
@@ -23,10 +24,11 @@
                 @endif
                 @if($storefrontFeatures['enable_add_to_cart'])
                     @if ($product->stock > 0)
-                        <form method="POST" action="{{ route('cart.add', $product) }}">@csrf<input type="hidden" name="quantity" value="1"><button class="add-button" aria-label="Add {{ $product->name }} to basket">+</button></form>
+                        <form method="POST" action="{{ route('cart.add', $product) }}" data-product-action="cart">@csrf<input type="hidden" name="quantity" value="1"><button class="add-button" aria-label="Add {{ $product->name }} to basket">+</button></form>
                     @else<span class="muted" style="font-size:11px">Sold out</span>@endif
                 @endif
             </div>
         @endif
+        <p class="product-action-feedback" data-product-feedback role="status" aria-live="polite" hidden></p>
     </div>
 </article>
