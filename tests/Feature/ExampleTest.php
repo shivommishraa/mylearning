@@ -462,7 +462,7 @@ class ExampleTest extends TestCase
 
         $this->from(route('admin.banners.index'))->post(route('admin.banners.store'), [
             'title' => 'Local essentials offer',
-            'image_file' => UploadedFile::fake()->image('banner.png'),
+            'image_file' => UploadedFile::fake()->image('banner.png')->size(6 * 1024),
             'button_text' => 'Shop',
             'button_url' => '/shop',
             'is_active' => 1,
