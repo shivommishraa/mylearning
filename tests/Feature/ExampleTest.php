@@ -160,16 +160,17 @@ class ExampleTest extends TestCase
                 ->assertSessionHasErrors(["quantities.{$product->id}"]);
         }
 
-        $this->withSession(['cart' => $cart])
+        $response = $this->withSession(['cart' => $cart])
             ->patchJson(route('cart.update'), [
                 'quantities' => [$product->id => 2],
-            ])
-            ->assertOk()
+            ]);
+
+        $response->assertOk()
             ->assertJsonPath('cart_count', 2)
-            ->assertJsonPath('lines.0.quantity', 2)
-            ->assertJsonPath('subtotal', $subtotal)
-            ->assertJsonPath('delivery_fee', $deliveryFee)
-            ->assertJsonPath('total', round($subtotal + $deliveryFee, 2));
+            ->assertJsonPath('lines.0.quantity', 2);
+        $this->assertEquals($subtotal, $response->json('subtotal'));
+        $this->assertEquals($deliveryFee, $response->json('delivery_fee'));
+        $this->assertEquals(round($subtotal + $deliveryFee, 2), $response->json('total'));
     }
 
     public function test_wishlist_toggle_returns_saved_state_and_renders_highlighted_product(): void
