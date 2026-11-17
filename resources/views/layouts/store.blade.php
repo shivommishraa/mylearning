@@ -40,9 +40,14 @@
                 <span data-menu-close-icon aria-hidden="true">×</span>
             </button>
             <a class="brand" href="{{ route('home') }}"><span class="brand-mark">{{ strtoupper(substr($site['business_name'], 0, 1)) }}</span><span>{{ $site['business_name'] }}</span></a>
-            <form class="search" action="{{ route('shop.index') }}" method="GET" role="search">
-                <input type="search" name="q" value="{{ request('q') }}" placeholder="Search atta, chawal, dal, chai…" aria-label="Search daily essentials">
-                <button aria-label="Search">⌕</button>
+            <form class="search" action="{{ route('shop.index') }}" method="GET" role="search" autocomplete="off" data-live-search data-suggestions-url="{{ route('search.suggest') }}">
+                <input type="search" name="q" value="{{ request('q') }}" placeholder="Search atta, chawal, dal, chai…" aria-label="Search daily essentials" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggestions" maxlength="120" data-search-input>
+                <button type="submit" aria-label="Search">⌕</button>
+                <div class="search-suggestions" id="search-suggestions" data-search-panel hidden>
+                    <div class="search-suggestions-message" data-search-message role="status" hidden></div>
+                    <div class="search-suggestions-list" data-search-results role="listbox" aria-label="Product suggestions"></div>
+                    <a class="search-suggestions-all" data-search-all hidden></a>
+                </div>
             </form>
             <div class="header-actions">
                 <a class="header-link" href="{{ auth()->check() ? route('account') : route('login') }}" aria-label="{{ auth()->check() ? 'My account' : 'Sign in' }}"><span class="header-icon" aria-hidden="true">♙</span><span class="label">{{ auth()->check() ? 'My account' : 'Sign in' }}</span></a>

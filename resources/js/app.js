@@ -7,6 +7,206 @@ window.Alpine = Alpine;
 
 Alpine.start();
 
+const liveSearchForm = document.querySelector('[data-live-search]');
+
+if (liveSearchForm) {
+    const searchInput = liveSearchForm.querySelector('[data-search-input]');
+    const searchPanel = liveSearchForm.querySelector('[data-search-panel]');
+    const searchMessage = liveSearchForm.querySelector('[data-search-message]');
+    const searchResults = liveSearchForm.querySelector('[data-search-results]');
+    const searchAllLink = liveSearchForm.querySelector('[data-search-all]');
+    let searchTimer;
+    let searchRequest;
+    let activeSearchOption = -1;
+
+    const setPanelOpen = (open) => {
+        searchPanel.hidden = !open;
+        searchInput.setAttribute('aria-expanded', String(open));
+        activeSearchOption = -1;
+        searchInput.removeAttribute('aria-activedescendant');
+    };
+
+    const makeSearchUrl = (term) => {
+        const url = new URL(liveSearchForm.action, window.location.origin);
+        url.searchParams.set('q', term);
+
+        return url.toString();
+    };
+
+    const showSearchMessage = (text, searchUrl = null) => {
+        searchResults.replaceChildren();
+        searchMessage.textContent = text;
+        searchMessage.hidden = false;
+        searchAllLink.hidden = !searchUrl;
+
+        if (searchUrl) {
+            searchAllLink.href = searchUrl;
+            searchAllLink.textContent = `Search all products for “${searchInput.value.trim()}”`;
+        }
+
+        setPanelOpen(true);
+    };
+
+    const renderSearchResults = (products, searchUrl) => {
+        searchResults.replaceChildren();
+        searchMessage.hidden = true;
+
+        products.forEach((product, index) => {
+            const option = document.createElement('a');
+            option.className = 'search-suggestion';
+            option.href = product.url;
+            option.id = `search-suggestion-${index}`;
+            option.dataset.searchOption = '';
+            option.setAttribute('role', 'option');
+            option.setAttribute('aria-selected', 'false');
+
+            const imageWrap = document.createElement('span');
+            imageWrap.className = 'search-suggestion-image';
+            imageWrap.setAttribute('aria-hidden', 'true');
+
+            if (product.image_url) {
+                const image = document.createElement('img');
+                image.src = product.image_url;
+                image.alt = '';
+                image.loading = 'lazy';
+                image.addEventListener('error', () => {
+                    image.remove();
+                    imageWrap.textContent = product.name.slice(0, 1).toUpperCase();
+                }, { once: true });
+                imageWrap.append(image);
+            } else {
+                imageWrap.textContent = product.name.slice(0, 1).toUpperCase();
+            }
+
+            const copy = document.createElement('span');
+            copy.className = 'search-suggestion-copy';
+            const name = document.createElement('span');
+            name.className = 'search-suggestion-name';
+            name.textContent = product.name;
+            const meta = document.createElement('span');
+            meta.className = 'search-suggestion-meta';
+            meta.textContent = product.meta || 'Everyday essential';
+            copy.append(name, meta);
+            option.append(imageWrap, copy);
+            searchResults.append(option);
+        });
+
+        searchAllLink.href = searchUrl;
+        searchAllLink.textContent = `View all results for “${searchInput.value.trim()}”`;
+        searchAllLink.hidden = false;
+        setPanelOpen(true);
+    };
+
+    const fetchSearchResults = (term) => {
+        searchRequest?.abort();
+        searchRequest = new AbortController();
+
+        const url = new URL(liveSearchForm.dataset.suggestionsUrl, window.location.origin);
+        url.searchParams.set('q', term);
+
+        fetch(url, {
+            headers: { Accept: 'application/json' },
+            signal: searchRequest.signal,
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Search is temporarily unavailable.');
+                }
+
+                return response.json();
+            })
+            .then((result) => {
+                if (term !== searchInput.value.trim()) {
+                    return;
+                }
+
+                if (result.products.length) {
+                    renderSearchResults(result.products, result.search_url);
+                } else {
+                    showSearchMessage('No products found. Try another search.', result.search_url);
+                }
+            })
+            .catch((error) => {
+                if (error.name !== 'AbortError' && term === searchInput.value.trim()) {
+                    showSearchMessage(error.message || 'Search is temporarily unavailable.', makeSearchUrl(term));
+                }
+            })
+            .finally(() => {
+                if (term === searchInput.value.trim()) {
+                    searchInput.removeAttribute('aria-busy');
+                }
+            });
+    };
+
+    searchInput.addEventListener('input', () => {
+        const term = searchInput.value.trim();
+        window.clearTimeout(searchTimer);
+        searchRequest?.abort();
+        searchInput.removeAttribute('aria-busy');
+
+        if (!term) {
+            setPanelOpen(false);
+
+            return;
+        }
+
+        if (term.length < 2) {
+            searchAllLink.hidden = true;
+            showSearchMessage('Type at least 2 characters to search.');
+
+            return;
+        }
+
+        searchAllLink.hidden = true;
+        showSearchMessage('Searching products…');
+        searchInput.setAttribute('aria-busy', 'true');
+        searchTimer = window.setTimeout(() => fetchSearchResults(term), 220);
+    });
+
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim().length >= 2 && searchPanel.hidden) {
+            searchInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    searchInput.addEventListener('keydown', (event) => {
+        const options = Array.from(searchResults.querySelectorAll('[data-search-option]'));
+
+        if (event.key === 'ArrowDown' && options.length) {
+            event.preventDefault();
+            activeSearchOption = (activeSearchOption + 1) % options.length;
+        } else if (event.key === 'ArrowUp' && options.length) {
+            event.preventDefault();
+            activeSearchOption = activeSearchOption <= 0 ? options.length - 1 : activeSearchOption - 1;
+        } else if (event.key === 'Escape') {
+            setPanelOpen(false);
+
+            return;
+        } else if (event.key === 'Enter' && activeSearchOption >= 0 && options[activeSearchOption]) {
+            event.preventDefault();
+            window.location.assign(options[activeSearchOption].href);
+
+            return;
+        } else {
+            return;
+        }
+
+        options.forEach((option, index) => {
+            const isActive = index === activeSearchOption;
+            option.classList.toggle('is-active', isActive);
+            option.setAttribute('aria-selected', String(isActive));
+        });
+        searchInput.setAttribute('aria-activedescendant', options[activeSearchOption].id);
+        options[activeSearchOption].scrollIntoView({ block: 'nearest' });
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+        if (!liveSearchForm.contains(event.target)) {
+            setPanelOpen(false);
+        }
+    });
+}
+
 document.addEventListener('submit', async (event) => {
     const form = event.target.closest('form[data-product-action]');
 

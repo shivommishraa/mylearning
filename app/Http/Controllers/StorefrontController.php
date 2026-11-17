@@ -10,6 +10,8 @@ use App\Models\HomeSection;
 use App\Models\Product;
 use App\Models\Testimonial;
 use App\Support\StoreCatalogRules;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -75,16 +77,10 @@ class StorefrontController extends Controller
             'max' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'sort' => ['nullable', Rule::in(['price-low', 'price-high', 'name'])],
         ]);
-        $products = StoreCatalogRules::constrainStoreProducts(Product::with(['category', 'brand'])
-            ->where('is_active', true)
-            ->whereHas('category', fn ($query) => $query->where('is_active', true)));
+        $products = $this->activeStoreProducts();
 
         if ($request->filled('q')) {
-            $term = trim((string) $request->query('q'));
-            $products->where(fn ($query) => $query
-                ->where('name', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%")
-                ->orWhereHas('category', fn ($category) => $category->where('name', 'like', "%{$term}%")));
+            $this->applyProductSearch($products, trim((string) $request->query('q')));
         }
 
         if ($request->filled('category')) {
@@ -118,6 +114,32 @@ class StorefrontController extends Controller
         ]);
     }
 
+    public function suggestions(Request $request): JsonResponse
+    {
+        $request->validate(['q' => ['nullable', 'string', 'max:120']]);
+        $term = trim((string) $request->query('q', ''));
+        $searchUrl = route('shop.index', ['q' => $term]);
+
+        if (mb_strlen($term) < 2) {
+            return response()->json(['products' => [], 'search_url' => $searchUrl]);
+        }
+
+        $matches = $this->applyProductSearch($this->activeStoreProducts(), $term)
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return response()->json([
+            'products' => $matches->take(5)->map(fn (Product $product) => [
+                'name' => $product->name,
+                'url' => route('products.show', $product->slug),
+                'meta' => $product->brand?->name ?: $product->category?->name,
+                'image_url' => $product->image_url,
+            ])->values(),
+            'search_url' => $searchUrl,
+        ]);
+    }
+
     public function product(Product $product): View
     {
         abort_unless(
@@ -135,5 +157,23 @@ class StorefrontController extends Controller
                 ->whereKeyNot($product->id)
             )->take(4)->get(),
         ]);
+    }
+
+    private function activeStoreProducts(): Builder
+    {
+        return StoreCatalogRules::constrainStoreProducts(Product::with(['category', 'brand'])
+            ->where('is_active', true)
+            ->whereHas('category', fn ($category) => $category->where('is_active', true)));
+    }
+
+    private function applyProductSearch(Builder $products, string $term): Builder
+    {
+        $search = '%'.$term.'%';
+
+        return $products->where(fn ($query) => $query
+            ->where('name', 'like', $search)
+            ->orWhere('description', 'like', $search)
+            ->orWhereHas('category', fn ($category) => $category->where('name', 'like', $search))
+            ->orWhereHas('brand', fn ($brand) => $brand->where('name', 'like', $search)->where('is_active', true)));
     }
 }

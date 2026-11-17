@@ -49,6 +49,23 @@ class ExampleTest extends TestCase
             ->assertDontSee('Harpic Power Plus Toilet Cleaner');
     }
 
+    public function test_global_search_suggestions_return_matching_active_products(): void
+    {
+        $product = Product::where('name', 'like', '%Maggi 2-Minute%')->firstOrFail();
+
+        $this->getJson(route('search.suggest', ['q' => 'Maggi']))
+            ->assertOk()
+            ->assertJsonPath('search_url', route('shop.index', ['q' => 'Maggi']))
+            ->assertJsonFragment([
+                'name' => $product->name,
+                'url' => route('products.show', $product->slug),
+            ]);
+
+        $this->getJson(route('search.suggest', ['q' => 'x']))
+            ->assertOk()
+            ->assertJsonCount(0, 'products');
+    }
+
     public function test_multiple_active_banners_render_as_ordered_slides(): void
     {
         Banner::query()->delete();
