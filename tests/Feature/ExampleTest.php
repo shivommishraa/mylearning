@@ -35,6 +35,9 @@ class ExampleTest extends TestCase
             ->assertSee('Everyday essentials, picked for you')
             ->assertSee('Aashirvaad Shudh Chakki Atta')
             ->assertSee('Shakti Bhog Chakki Atta')
+            ->assertSee('data-testimonial-carousel', false)
+            ->assertSee('aria-roledescription="slide"', false)
+            ->assertSee('data-testimonial-next', false)
             ->assertDontSee('FRESH10')
             ->assertDontSee('Fresh Produce')
             ->assertSee('application/ld+json');

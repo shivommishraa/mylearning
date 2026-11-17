@@ -337,6 +337,68 @@ if (adminMenuButton && adminSidebar && adminMenuClose && adminMenuBackdrop) {
     compactLayout.addEventListener('change', () => setAdminMenuOpen(false));
 }
 
+document.querySelectorAll('[data-testimonial-carousel]').forEach((carousel) => {
+    const slides = Array.from(carousel.querySelectorAll('[data-testimonial-slide]'));
+    const dots = Array.from(carousel.querySelectorAll('[data-testimonial-dot]'));
+    const previousButton = carousel.querySelector('[data-testimonial-prev]');
+    const nextButton = carousel.querySelector('[data-testimonial-next]');
+
+    if (slides.length < 2) {
+        return;
+    }
+
+    let activeIndex = slides.findIndex((slide) => slide.classList.contains('is-active'));
+
+    const showSlide = (index) => {
+        activeIndex = (index + slides.length) % slides.length;
+
+        slides.forEach((slide, slideIndex) => {
+            const isActive = slideIndex === activeIndex;
+            slide.classList.toggle('is-active', isActive);
+            slide.setAttribute('aria-hidden', String(!isActive));
+        });
+
+        dots.forEach((dot, dotIndex) => {
+            const isActive = dotIndex === activeIndex;
+            dot.classList.toggle('is-active', isActive);
+            dot.setAttribute('aria-current', String(isActive));
+        });
+    };
+
+    previousButton.addEventListener('click', () => showSlide(activeIndex - 1));
+    nextButton.addEventListener('click', () => showSlide(activeIndex + 1));
+    dots.forEach((dot) => {
+        dot.addEventListener('click', () => showSlide(Number(dot.dataset.testimonialDot)));
+    });
+
+    carousel.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            showSlide(activeIndex - 1);
+        } else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            showSlide(activeIndex + 1);
+        }
+    });
+
+    let touchStartX = null;
+    carousel.addEventListener('touchstart', (event) => {
+        touchStartX = event.changedTouches[0].clientX;
+    }, { passive: true });
+    carousel.addEventListener('touchend', (event) => {
+        if (touchStartX === null) {
+            return;
+        }
+
+        const swipeDistance = event.changedTouches[0].clientX - touchStartX;
+        touchStartX = null;
+
+        if (Math.abs(swipeDistance) >= 45) {
+            showSlide(activeIndex + (swipeDistance < 0 ? 1 : -1));
+        }
+    }, { passive: true });
+});
+
 document.querySelectorAll('[data-banner-slider]').forEach((slider) => {
     const slides = Array.from(slider.querySelectorAll('[data-banner-slide]'));
     const dots = Array.from(slider.querySelectorAll('[data-banner-dot]'));

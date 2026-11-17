@@ -1,6 +1,7 @@
 @extends('layouts.store')
 
 @section('content')
+<div class="store-home">
     <section class="wrap hero {{ $banners->count() > 1 ? 'hero-slider' : '' }}" @if($banners->count() > 1) data-banner-slider aria-label="Homepage banners" @endif>
         @forelse($banners as $banner)
             <article class="hero-slide {{ $loop->first ? 'is-active' : '' }}" data-banner-slide aria-hidden="{{ $loop->first ? 'false' : 'true' }}" @if($banners->count() > 1) role="group" aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ $banners->count() }}" @endif>
@@ -9,8 +10,11 @@
                     <span class="eyebrow">{{ $banner->eyebrow ?: 'YOUR NEIGHBOURHOOD DAILY-NEEDS STORE' }}</span>
                     <h1>{{ $site['hero_title'] ?: $banner->title }}</h1>
                     <p>{{ $site['hero_subtitle'] ?: ($banner->subtitle ?: 'Atta, chawal, dal, chai and household essentials from trusted Indian brands.') }}</p>
-                    <a class="button" href="{{ $banner->button_url ?: route('shop.index') }}">{{ $banner->button_text ?: 'Shop daily essentials' }} <span>→</span></a>
-                    <div class="hero-local-note">Proudly serving Greater Noida, Uttar Pradesh</div>
+                    <div class="hero-actions">
+                        <a class="button" href="{{ $banner->button_url ?: route('shop.index') }}">{{ $banner->button_text ?: 'Shop daily essentials' }} <span>→</span></a>
+                        <a class="hero-secondary-link" href="#shop-categories">Explore categories <span aria-hidden="true">↓</span></a>
+                    </div>
+                    <div class="hero-local-note"><span aria-hidden="true">⌖</span> Proudly serving Greater Noida, Uttar Pradesh</div>
                 </div>
             </article>
         @empty
@@ -19,8 +23,11 @@
                 <span class="eyebrow">YOUR NEIGHBOURHOOD DAILY-NEEDS STORE</span>
                 <h1>{{ $site['hero_title'] ?: 'Everyday essentials, closer to home.' }}</h1>
                 <p>{{ $site['hero_subtitle'] ?: 'Atta, chawal, dal, chai and household essentials from trusted Indian brands.' }}</p>
-                <a class="button" href="{{ route('shop.index') }}">Shop daily essentials <span>→</span></a>
-                <div class="hero-local-note">Proudly serving Greater Noida, Uttar Pradesh</div>
+                <div class="hero-actions">
+                    <a class="button" href="{{ route('shop.index') }}">Shop daily essentials <span>→</span></a>
+                    <a class="hero-secondary-link" href="#shop-categories">Explore categories <span aria-hidden="true">↓</span></a>
+                </div>
+                <div class="hero-local-note"><span aria-hidden="true">⌖</span> Proudly serving Greater Noida, Uttar Pradesh</div>
             </div>
         @endforelse
         @if($banners->count() > 1)
@@ -37,7 +44,7 @@
         @endif
     </section>
 
-    <section class="wrap section">
+    <section id="shop-categories" class="wrap section">
         <div class="section-heading"><div><span class="eyebrow">EVERYDAY NEEDS, ALL IN ONE PLACE</span><h2>Shop by category</h2><p>The trusted aisles for every Indian home.</p></div><a class="text-link" href="{{ route('shop.index') }}">See everything →</a></div>
         <div class="category-grid">
             @foreach ($categories as $category)
@@ -73,9 +80,29 @@
     @if ($testimonials->isNotEmpty())
     <section class="wrap section">
         <div class="section-heading"><div><span class="eyebrow">KIND WORDS FROM CLOSE TO HOME</span><h2>Good neighbours, good service</h2></div></div>
-        <div class="testimonial-grid">@foreach ($testimonials as $review)
-            <article class="quote-card"><div class="stars">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</div><blockquote>“{{ $review->quote }}”</blockquote><div class="quote-person"><span class="avatar">{{ strtoupper(substr($review->name, 0, 1)) }}</span><div><strong>{{ $review->name }}</strong><small>{{ $review->location }}</small></div></div></article>
-        @endforeach</div>
+        <div class="testimonial-carousel" data-testimonial-carousel role="region" aria-roledescription="carousel" aria-label="Kind words from close to home">
+            <div class="testimonial-stage">
+                @foreach ($testimonials as $review)
+                    <article class="quote-card testimonial-slide {{ $loop->first ? 'is-active' : '' }}" data-testimonial-slide role="group" aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ $testimonials->count() }}" aria-hidden="{{ $loop->first ? 'false' : 'true' }}">
+                        <div class="stars" role="img" aria-label="{{ $review->rating }} out of 5 stars">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</div>
+                        <blockquote>“{{ $review->quote }}”</blockquote>
+                        <div class="quote-person"><span class="avatar" aria-hidden="true">{{ strtoupper(substr($review->name, 0, 1)) }}</span><div><strong>{{ $review->name }}</strong><small>{{ $review->location }}</small></div></div>
+                    </article>
+                @endforeach
+            </div>
+            @if ($testimonials->count() > 1)
+                <div class="testimonial-controls" aria-label="Testimonial controls">
+                    <button type="button" class="testimonial-control" data-testimonial-prev aria-label="Previous testimonial">‹</button>
+                    <div class="testimonial-dots">
+                        @foreach ($testimonials as $index => $review)
+                            <button type="button" class="testimonial-dot {{ $loop->first ? 'is-active' : '' }}" data-testimonial-dot="{{ $index }}" aria-label="Show testimonial {{ $loop->iteration }}" aria-current="{{ $loop->first ? 'true' : 'false' }}"></button>
+                        @endforeach
+                    </div>
+                    <button type="button" class="testimonial-control" data-testimonial-next aria-label="Next testimonial">›</button>
+                </div>
+            @endif
+        </div>
     </section>
     @endif
+    </div>
 @endsection
