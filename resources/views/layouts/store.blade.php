@@ -35,7 +35,10 @@
     <div class="announcement">{{ $site['announcement_text'] }} <strong>· Free delivery over ₹{{ number_format((float) $site['free_delivery_minimum']) }}</strong></div>
     <header class="header">
         <div class="wrap header-main">
-            <button type="button" class="mobile-toggle" aria-label="Toggle navigation" aria-expanded="false" data-menu-toggle>☰</button>
+            <button type="button" class="mobile-toggle" aria-label="Open navigation" aria-expanded="false" data-menu-toggle>
+                <span data-menu-open-icon aria-hidden="true">☰</span>
+                <span data-menu-close-icon aria-hidden="true">×</span>
+            </button>
             <a class="brand" href="{{ route('home') }}"><span class="brand-mark">{{ strtoupper(substr($site['business_name'], 0, 1)) }}</span><span>{{ $site['business_name'] }}</span></a>
             <form class="search" action="{{ route('shop.index') }}" method="GET" role="search">
                 <input type="search" name="q" value="{{ request('q') }}" placeholder="Search atta, chawal, dal, chai…" aria-label="Search daily essentials">

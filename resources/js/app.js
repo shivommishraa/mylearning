@@ -72,11 +72,13 @@ if (storeMenuButton && storeMenu) {
     const closeStoreMenu = () => {
         storeMenu.classList.remove('open');
         storeMenuButton.setAttribute('aria-expanded', 'false');
+        storeMenuButton.setAttribute('aria-label', 'Open navigation');
     };
 
     storeMenuButton.addEventListener('click', () => {
         const isOpen = storeMenu.classList.toggle('open');
         storeMenuButton.setAttribute('aria-expanded', String(isOpen));
+        storeMenuButton.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
     });
 
     storeMenu.querySelectorAll('a').forEach((link) => {
