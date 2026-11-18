@@ -129,6 +129,19 @@ class ExampleTest extends TestCase
             ->assertDontSee('Global fallback introduction');
     }
 
+    public function test_public_storage_images_are_served_without_a_storage_symlink(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('banners/banner.png', 'image contents');
+
+        $this->get('/storage/banners/banner.png')
+            ->assertOk()
+            ->assertStreamedContent('image contents');
+
+        $this->get('/storage/banners/missing.png')->assertNotFound();
+        $this->get('/storage/../.env')->assertNotFound();
+    }
+
     public function test_product_storefront_settings_hide_prices_and_prevent_cart_additions(): void
     {
         $product = Product::where('is_active', true)->firstOrFail();
