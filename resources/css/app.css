@@ -291,8 +291,8 @@ img{max-width:100%;display:block}
 .muted{color:var(--muted)}
 .store-home{background:linear-gradient(180deg,#fbfcf8 0%,#fff 34%)}
 .store-home .hero{isolation:isolate;min-height:470px;border-radius:26px;background:radial-gradient(ellipse at 83% 18%,rgba(255,255,255,.9),transparent 30%),linear-gradient(120deg,#f3f7e9 0%,#edf4e5 58%,#e5efdf 100%);box-shadow:0 22px 55px rgba(35,73,45,.11)}
-.store-home .hero-media{inset:0 0 0 42%;background-position:center right}
-.store-home .hero-media:after{background:linear-gradient(90deg,#f3f7e9 0%,rgba(243,247,233,.96) 16%,rgba(243,247,233,.64) 38%,rgba(243,247,233,0) 76%)}
+.store-home .hero-media{inset:0;background-position:center right;background-size:cover}
+.store-home .hero-media:after{background:linear-gradient(90deg,rgba(243,247,233,.9) 0%,rgba(243,247,233,.78) 34%,rgba(243,247,233,.35) 68%,rgba(243,247,233,.2) 100%)}
 .store-home .hero-copy{max-width:660px;padding:66px 0 65px 7.5%}
 .store-home .hero .eyebrow{padding:8px 13px;margin-bottom:20px;border:1px solid rgba(36,107,69,.12);border-radius:999px;background:rgba(255,255,255,.75);letter-spacing:.13em}
 .store-home .hero h1{max-width:620px;font-size:clamp(44px,5.4vw,70px);letter-spacing:-.065em}
@@ -325,8 +325,8 @@ img{max-width:100%;display:block}
 @media(max-width:700px){
     .store-home .hero{min-height:600px;margin:20px auto 48px;align-items:flex-end;border-radius:20px}
     .store-home .hero-slide{align-items:flex-end}
-    .store-home .hero-media{inset:0 0 370px;background-position:center top;background-repeat:no-repeat;background-size:100% auto}
-    .store-home .hero-media:after{background:linear-gradient(180deg,rgba(243,247,233,.04) 0%,rgba(243,247,233,0) 65%,#f3f7e9 100%)}
+    .store-home .hero-media{inset:0;background-position:center;background-repeat:no-repeat;background-size:cover}
+    .store-home .hero-media:after{background:linear-gradient(180deg,rgba(243,247,233,.18) 0%,rgba(243,247,233,.38) 42%,rgba(243,247,233,.82) 100%)}
     .store-home .hero-copy{max-width:100%;padding:0 20px 24px}
     .store-home .hero .eyebrow{font-size:9px;margin-bottom:14px}
     .store-home .hero h1{font-size:clamp(38px,10.5vw,46px);line-height:1.05}
