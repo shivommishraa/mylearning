@@ -8,8 +8,8 @@
                 <div class="hero-media" style="background-image:url('{{ $banner->image_url ?? asset('images/hero-daily-needs.svg') }}')"></div>
                 <div class="hero-copy">
                     <span class="eyebrow">{{ $banner->eyebrow ?: 'YOUR NEIGHBOURHOOD DAILY-NEEDS STORE' }}</span>
-                    <h1>{{ $site['hero_title'] ?: $banner->title }}</h1>
-                    <p>{{ $site['hero_subtitle'] ?: ($banner->subtitle ?: 'Atta, chawal, dal, chai and household essentials from trusted Indian brands.') }}</p>
+                    <h1>{{ $banner->title }}</h1>
+                    <p>{{ $banner->subtitle ?: ($site['hero_subtitle'] ?: 'Atta, chawal, dal, chai and household essentials from trusted Indian brands.') }}</p>
                     <div class="hero-actions">
                         <a class="button" href="{{ $banner->button_url ?: route('shop.index') }}">{{ $banner->button_text ?: 'Shop daily essentials' }} <span>→</span></a>
                         <a class="hero-secondary-link" href="#shop-categories">Explore categories <span aria-hidden="true">↓</span></a>

@@ -325,7 +325,7 @@ img{max-width:100%;display:block}
 @media(max-width:700px){
     .store-home .hero{min-height:600px;margin:20px auto 48px;align-items:flex-end;border-radius:20px}
     .store-home .hero-slide{align-items:flex-end}
-    .store-home .hero-media{inset:0 0 370px;background-position:center top;background-repeat:no-repeat;background-size:86% auto}
+    .store-home .hero-media{inset:0 0 370px;background-position:center top;background-repeat:no-repeat;background-size:100% auto}
     .store-home .hero-media:after{background:linear-gradient(180deg,rgba(243,247,233,.04) 0%,rgba(243,247,233,0) 65%,#f3f7e9 100%)}
     .store-home .hero-copy{max-width:100%;padding:0 20px 24px}
     .store-home .hero .eyebrow{font-size:9px;margin-bottom:14px}

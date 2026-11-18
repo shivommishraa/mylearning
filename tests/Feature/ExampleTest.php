@@ -105,6 +105,30 @@ class ExampleTest extends TestCase
         );
     }
 
+    public function test_banner_content_takes_precedence_over_homepage_fallback_settings(): void
+    {
+        SiteSetting::updateOrCreate(
+            ['key' => 'hero_title'],
+            ['value' => 'Global fallback headline', 'group' => 'homepage'],
+        );
+        SiteSetting::updateOrCreate(
+            ['key' => 'hero_subtitle'],
+            ['value' => 'Global fallback introduction', 'group' => 'homepage'],
+        );
+
+        Banner::query()->update([
+            'title' => 'Banner-specific headline',
+            'subtitle' => 'Banner-specific introduction',
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Banner-specific headline')
+            ->assertSee('Banner-specific introduction')
+            ->assertDontSee('Global fallback headline')
+            ->assertDontSee('Global fallback introduction');
+    }
+
     public function test_product_storefront_settings_hide_prices_and_prevent_cart_additions(): void
     {
         $product = Product::where('is_active', true)->firstOrFail();
