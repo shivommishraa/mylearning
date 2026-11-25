@@ -22,8 +22,10 @@ img{max-width:100%;display:block}
 .header-main{height:82px;display:flex;align-items:center;gap:35px}
 .brand{display:inline-flex;align-items:center;gap:11px;font-size:20px;font-weight:800;white-space:nowrap;letter-spacing:-.06em}
 .brand-mark{width:39px;height:39px;border-radius:13px 13px 13px 4px;background:var(--green);display:grid;place-items:center;color:#fff;font-size:18px;box-shadow:0 6px 15px #246b4530}
-.search{height:46px;max-width:470px;flex:1;display:flex;position:relative;z-index:30;border:1px solid var(--line);border-radius:8px;overflow:visible;background:#fbfcfa}
+.search{height:46px;max-width:470px;flex:1;display:flex;position:relative;z-index:30;border:1px solid var(--line);border-radius:8px;overflow:visible;background:#fbfcfa;transition:border-color .16s ease,box-shadow .16s ease}
+.search:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,69,.12)}
 .search input{border:0;background:transparent;padding:0 16px;outline:0;min-width:0;flex:1;color:var(--ink)}
+.search input:focus{box-shadow:none}
 .search button{border:0;background:transparent;padding:0 15px;color:var(--green);font-size:18px}
 .search-suggestions{position:absolute;top:calc(100% + 9px);left:0;right:0;z-index:40;max-height:70vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 18px 45px rgba(27,50,33,.16)}
 .search-suggestions[hidden],.search-suggestions-message[hidden],.search-suggestions-all[hidden]{display:none}
