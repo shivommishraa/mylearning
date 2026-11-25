@@ -383,11 +383,57 @@ textarea {
     }
 
     .hero-slider-controls {
-        right: 12px;
-        bottom: 12px;
-        left: 12px;
+        top: 7px;
+        right: 7px;
+        bottom: auto;
+        left: auto;
         justify-content: flex-end;
-        gap: 6px;
+        gap: 1px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+    }
+
+    .hero-slider-button,
+    .hero-slider-button[data-banner-toggle] {
+        width: 23px;
+        min-width: 0;
+        height: 23px;
+        padding: 0;
+        font-size: 16px;
+    }
+
+    .hero-slider-dots {
+        gap: 3px;
+    }
+
+    .hero-slider-dot {
+        width: 5px;
+        height: 5px;
+    }
+
+    .hero-slider-dot.is-active {
+        width: 12px;
+    }
+
+    .product-wish {
+        top: 7px;
+        right: 7px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .product-photo > a.product-wish {
+        inset: 7px 7px auto auto;
+        width: 32px;
+        height: 32px;
+    }
+
+    .wishlist-icon svg {
+        width: 20px;
+        height: 20px;
     }
 
     .section-heading {

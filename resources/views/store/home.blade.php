@@ -41,7 +41,7 @@
                     @endforeach
                 </div>
                 <button type="button" class="hero-slider-button" data-banner-next aria-label="Next banner">›</button>
-                <button type="button" class="hero-slider-button" data-banner-toggle aria-label="Pause automatic banner rotation">Pause</button>
+                <button type="button" class="hero-slider-button" data-banner-toggle aria-label="Pause automatic banner rotation">Ⅱ</button>
             </div>
         @endif
     </section>

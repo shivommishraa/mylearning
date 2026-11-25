@@ -535,7 +535,7 @@ document.querySelectorAll('[data-banner-slider]').forEach((slider) => {
     };
 
     const updateToggleButton = () => {
-        toggleButton.textContent = paused ? 'Play' : 'Pause';
+        toggleButton.textContent = paused ? '▶' : 'Ⅱ';
         toggleButton.setAttribute(
             'aria-label',
             paused ? 'Start automatic banner rotation' : 'Pause automatic banner rotation',
