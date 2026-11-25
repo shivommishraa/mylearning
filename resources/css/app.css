@@ -105,12 +105,12 @@ img{max-width:100%;display:block}
 .old-price{color:#a1aaa2;text-decoration:line-through;font-size:12px;font-weight:400;margin-left:5px}
 .add-button{width:34px;height:34px;border:1px solid #cbd9ce;border-radius:5px;background:#fff;color:var(--green);font-size:20px;line-height:1}
 .add-button:hover{background:var(--green);color:#fff}
-.wide-promo{display:grid;grid-template-columns:1fr 1fr;min-height:245px;background:#eff4e9;border-radius:5px;overflow:hidden;margin:5px 0 58px}
-.wide-promo-copy{padding:40px 10%}
+.wide-promo{width:100%;display:grid;grid-template-columns:1fr 1fr;min-height:300px;background:#eff4e9;overflow:hidden;margin:5px 0 58px}
+.wide-promo-copy{padding:48px clamp(32px,8vw,120px)}
 .wide-promo h2{font-size:31px;line-height:1.15;margin:6px 0 12px}
 .wide-promo p{color:#617065;font-size:14px;max-width:390px}
 .wide-promo img{width:100%;height:100%;object-fit:cover;min-height:245px}
-.testimonial-carousel{max-width:760px;margin:0 auto}
+.testimonial-carousel{width:100%;max-width:none;margin:0 auto}
 .testimonial-stage{display:grid}
 .testimonial-slide{grid-area:1/1;opacity:0;visibility:hidden;transform:translateX(18px);transition:opacity .28s ease,transform .28s ease,visibility .28s ease;background:#fafbf8;padding:clamp(22px,5vw,36px);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(27,50,33,.08)}
 .testimonial-slide.is-active{opacity:1;visibility:visible;transform:translateX(0)}
@@ -323,7 +323,9 @@ img{max-width:100%;display:block}
 .store-home .category-image{width:88px;height:88px;margin-bottom:15px;border:4px solid #fff;box-shadow:0 8px 20px rgba(36,107,69,.1)}
 .store-home .category-symbol{background:radial-gradient(circle at 35% 30%,#fff 0%,#edf5e6 72%);font-size:30px}
 .store-home .category-card strong{line-height:1.4}
-.store-home .wide-promo{border-radius:22px;box-shadow:0 16px 40px rgba(27,50,33,.08)}
+.store-home .wide-promo{border-radius:0;box-shadow:none}
+.store-home .wide-promo h2{font-size:clamp(34px,3vw,44px)}
+.store-home .wide-promo p{font-size:16px;line-height:1.65}
 .store-home .brand-chip{padding:10px 15px;border-radius:999px;background:#fff}
 .store-home .brand-chip:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(27,50,33,.07)}
 .store-home .product-card{border-radius:14px;box-shadow:0 8px 25px rgba(27,50,33,.045)}
@@ -355,7 +357,7 @@ img{max-width:100%;display:block}
     .store-home .category-card{min-height:150px;padding:13px 5px 15px;border-radius:14px}
     .store-home .category-image{width:68px;height:68px;margin-bottom:11px}
     .store-home .category-card strong{font-size:11px}
-    .store-home .wide-promo{border-radius:18px}
+    .store-home .wide-promo h2{font-size:27px}
     .store-home .product-info{padding:11px}
 }
 @media(max-width:700px){.store-home .wide-promo-copy{text-align:center}.store-home .wide-promo-copy p{margin-inline:auto}}
