@@ -696,3 +696,243 @@ document.querySelectorAll('[data-welcome-popup]').forEach((popup) => {
 
     showTimer = window.setTimeout(openPopup, Number(popup.dataset.displayDelay || 0) * 1000);
 });
+
+document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
+    const input = editor.querySelector('[data-photo-input]');
+    const preview = editor.querySelector('[data-photo-preview]');
+    const backdrop = editor.querySelector('[data-crop-backdrop]');
+    const canvas = editor.querySelector('[data-crop-canvas]');
+    const zoomControl = editor.querySelector('[data-crop-zoom]');
+    const status = editor.querySelector('[data-photo-status]');
+    const errorMessage = editor.querySelector('[data-crop-error]');
+    const removeCheckbox = editor.querySelector('[data-photo-remove]');
+    const context = canvas?.getContext('2d');
+
+    if (!input || !preview || !backdrop || !canvas || !zoomControl || !context) {
+        return;
+    }
+
+    let image = null;
+    let rotation = 0;
+    let zoom = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    let pointer = null;
+    let committedFile = null;
+    let previousFocus = null;
+
+    const showError = (message) => {
+        errorMessage.textContent = message;
+        errorMessage.hidden = false;
+        status.textContent = message;
+        status.classList.add('is-error');
+    };
+
+    const clampOffset = (scale) => {
+        const quarterTurn = Math.abs(rotation) % 180 === 90;
+        const imageWidth = (quarterTurn ? image.height : image.width) * scale;
+        const imageHeight = (quarterTurn ? image.width : image.height) * scale;
+        const maxX = Math.max(0, (imageWidth - canvas.width) / 2);
+        const maxY = Math.max(0, (imageHeight - canvas.height) / 2);
+        offsetX = Math.max(-maxX, Math.min(maxX, offsetX));
+        offsetY = Math.max(-maxY, Math.min(maxY, offsetY));
+    };
+
+    const drawCrop = () => {
+        if (!image) {
+            return;
+        }
+
+        const quarterTurn = Math.abs(rotation) % 180 === 90;
+        const baseWidth = quarterTurn ? image.height : image.width;
+        const baseHeight = quarterTurn ? image.width : image.height;
+        const scale = Math.max(canvas.width / baseWidth, canvas.height / baseHeight) * zoom;
+        clampOffset(scale);
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.save();
+        context.beginPath();
+        context.rect(0, 0, canvas.width, canvas.height);
+        context.clip();
+        context.translate(canvas.width / 2 + offsetX, canvas.height / 2 + offsetY);
+        context.rotate((rotation * Math.PI) / 180);
+        context.drawImage(image, (-image.width * scale) / 2, (-image.height * scale) / 2, image.width * scale, image.height * scale);
+        context.restore();
+    };
+
+    const setInputFile = (file) => {
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+    };
+
+    const closeEditor = (restoreFile) => {
+        backdrop.hidden = true;
+        document.body.classList.remove('photo-crop-open');
+        image = null;
+        pointer = null;
+
+        if (restoreFile) {
+            if (committedFile) {
+                setInputFile(committedFile);
+            } else {
+                input.value = '';
+            }
+        }
+
+        previousFocus?.focus();
+    };
+
+    const openEditor = (file) => {
+        const objectUrl = URL.createObjectURL(file);
+        const source = new Image();
+
+        source.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            image = source;
+            rotation = 0;
+            zoom = 1;
+            offsetX = 0;
+            offsetY = 0;
+            zoomControl.value = '1';
+            errorMessage.hidden = true;
+            errorMessage.textContent = '';
+            previousFocus = document.activeElement;
+            backdrop.hidden = false;
+            document.body.classList.add('photo-crop-open');
+            drawCrop();
+            editor.querySelector('[data-crop-apply]')?.focus();
+        };
+
+        source.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            if (committedFile) {
+                setInputFile(committedFile);
+            } else {
+                input.value = '';
+            }
+            showError('This image could not be opened. Please choose another photo.');
+        };
+
+        source.src = objectUrl;
+    };
+
+    const updatePreview = (dataUrl) => {
+        let previewImage = preview.querySelector('[data-photo-preview-image]');
+        if (!previewImage) {
+            previewImage = document.createElement('img');
+            previewImage.dataset.photoPreviewImage = '';
+            previewImage.alt = 'Profile photo preview';
+            preview.querySelector('[data-photo-placeholder]')?.remove();
+            preview.append(previewImage);
+        }
+
+        previewImage.src = dataUrl;
+    };
+
+    input.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+            if (committedFile) {
+                setInputFile(committedFile);
+            } else {
+                input.value = '';
+            }
+            showError('Choose a JPG, PNG or WebP image up to 5 MB.');
+            return;
+        }
+
+        if (removeCheckbox) {
+            removeCheckbox.checked = false;
+        }
+
+        status.textContent = '';
+        status.classList.remove('is-error');
+        openEditor(file);
+    });
+
+    zoomControl.addEventListener('input', () => {
+        zoom = Number(zoomControl.value);
+        drawCrop();
+    });
+
+    editor.querySelectorAll('[data-crop-rotate]').forEach((button) => {
+        button.addEventListener('click', () => {
+            rotation = (rotation + Number(button.dataset.cropRotate) + 360) % 360;
+            offsetX = 0;
+            offsetY = 0;
+            drawCrop();
+        });
+    });
+
+    canvas.addEventListener('pointerdown', (event) => {
+        if (!image) {
+            return;
+        }
+
+        const bounds = canvas.getBoundingClientRect();
+        pointer = {
+            id: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+            offsetX,
+            offsetY,
+            scaleX: canvas.width / bounds.width,
+            scaleY: canvas.height / bounds.height,
+        };
+        canvas.setPointerCapture(event.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+        if (!pointer || pointer.id !== event.pointerId) {
+            return;
+        }
+
+        offsetX = pointer.offsetX + (event.clientX - pointer.x) * pointer.scaleX;
+        offsetY = pointer.offsetY + (event.clientY - pointer.y) * pointer.scaleY;
+        drawCrop();
+    });
+
+    canvas.addEventListener('pointerup', (event) => {
+        if (pointer?.id === event.pointerId) {
+            pointer = null;
+        }
+    });
+
+    editor.querySelectorAll('[data-crop-cancel]').forEach((button) => {
+        button.addEventListener('click', () => closeEditor(true));
+    });
+
+    backdrop.addEventListener('click', (event) => {
+        if (event.target === backdrop) {
+            closeEditor(true);
+        }
+    });
+
+    editor.querySelector('[data-crop-apply]')?.addEventListener('click', () => {
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                showError('The cropped photo could not be created. Please try another image.');
+                return;
+            }
+
+            const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' });
+            setInputFile(file);
+            committedFile = file;
+            updatePreview(canvas.toDataURL('image/jpeg', 0.9));
+            status.textContent = 'Photo cropped and ready to save.';
+            status.classList.remove('is-error');
+            closeEditor(false);
+        }, 'image/jpeg', 0.9);
+    });
+
+    backdrop.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeEditor(true);
+        }
+    });
+});

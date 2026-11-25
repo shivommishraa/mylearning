@@ -7,7 +7,9 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -152,5 +154,57 @@ class CustomerManagementTest extends TestCase
 
         $this->assertDatabaseHas('users', ['id' => $customer->id]);
         $this->assertDatabaseHas('orders', ['id' => $order->id, 'user_id' => $customer->id]);
+    }
+
+    public function test_super_admin_can_manage_customer_profile_photo_and_address(): void
+    {
+        Storage::fake('local');
+        $superAdmin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();
+
+        $this->actingAs($superAdmin)->post(route('admin.customers.store'), [
+            'name' => 'Profile Customer',
+            'email' => 'profile.customer@example.com',
+            'phone' => '9876543210',
+            'profile_photo' => UploadedFile::fake()->image('profile.png'),
+            'address_line' => '12 Green Avenue',
+            'address_phone' => '9876543211',
+            'city' => 'Greater Noida',
+            'state' => 'Uttar Pradesh',
+            'postal_code' => '201318',
+            'password' => 'CustomerPass123!',
+            'password_confirmation' => 'CustomerPass123!',
+        ])->assertSessionHasNoErrors();
+
+        $customer = User::where('email', 'profile.customer@example.com')->firstOrFail();
+        $oldPhoto = $customer->profile_photo_path;
+        Storage::disk('local')->assertExists($oldPhoto);
+        $this->get(route('admin.customers.show', $customer))
+            ->assertOk()
+            ->assertSee(route('profile.photo', $customer))
+            ->assertSee('12 Green Avenue');
+        $this->get(route('profile.photo', $customer))->assertOk();
+
+        $this->put(route('admin.customers.update', $customer), [
+            'name' => 'Profile Customer',
+            'email' => 'profile.customer@example.com',
+            'profile_photo' => UploadedFile::fake()->image('updated-profile.png'),
+            'address_line' => '22 New Road',
+            'address_phone' => '9876543212',
+            'city' => 'Noida',
+            'state' => 'Uttar Pradesh',
+            'postal_code' => '201301',
+        ])->assertSessionHasNoErrors();
+
+        $customer->refresh();
+        $this->assertNotSame($oldPhoto, $customer->profile_photo_path);
+        Storage::disk('local')->assertMissing($oldPhoto);
+        Storage::disk('local')->assertExists($customer->profile_photo_path);
+        $this->assertDatabaseHas('addresses', [
+            'user_id' => $customer->id,
+            'address_line' => '22 New Road',
+            'phone' => '9876543212',
+            'city' => 'Noida',
+            'is_default' => true,
+        ]);
     }
 }

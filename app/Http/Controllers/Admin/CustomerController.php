@@ -7,6 +7,8 @@ use App\Models\ActivityLog;
 use App\Models\Enquiry;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Support\CustomerAddressManager;
+use App\Support\ProfilePhotoManager;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,18 +42,24 @@ class CustomerController extends Controller
 
     public function create(): View
     {
-        return view('admin.customers.form', ['customer' => new User]);
+        return view('admin.customers.form', ['customer' => new User, 'address' => null]);
     }
 
-    public function store(Request $request): RedirectResponse
-    {
-        $data = $this->validatedCustomer($request, creating: true);
+    public function store(
+        Request $request,
+        ProfilePhotoManager $photos,
+        CustomerAddressManager $addresses,
+    ): RedirectResponse {
+        $data = $this->validatedCustomer($request, $addresses, creating: true);
+        $photoPath = $photos->save($data['profile_photo'] ?? null, null);
         $customer = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
+            'profile_photo_path' => $photoPath,
             'password' => Hash::make($data['password']),
         ]);
+        $addresses->syncProfileAddress($customer, $data);
 
         if (SiteSetting::getValue('require_email_verification', '0') === '1') {
             event(new Registered($customer));
@@ -73,6 +81,7 @@ class CustomerController extends Controller
         return view('admin.customers.show', [
             'customer' => $customer->loadCount('orders'),
             'orders' => $customer->orders()->latest()->take(10)->get(),
+            'address' => app(CustomerAddressManager::class)->primaryAddress($customer),
         ]);
     }
 
@@ -80,19 +89,33 @@ class CustomerController extends Controller
     {
         $this->ensureCustomer($customer);
 
-        return view('admin.customers.form', compact('customer'));
+        return view('admin.customers.form', [
+            'customer' => $customer,
+            'address' => app(CustomerAddressManager::class)->primaryAddress($customer),
+        ]);
     }
 
-    public function update(Request $request, User $customer): RedirectResponse
-    {
+    public function update(
+        Request $request,
+        User $customer,
+        ProfilePhotoManager $photos,
+        CustomerAddressManager $addresses,
+    ): RedirectResponse {
         $this->ensureCustomer($customer);
-        $data = $this->validatedCustomer($request, $customer);
+        $data = $this->validatedCustomer($request, $addresses, $customer);
         $emailChanged = $customer->email !== $data['email'];
+        $previousPhoto = $customer->profile_photo_path;
+        $newPhoto = $photos->save(
+            $data['profile_photo'] ?? null,
+            $previousPhoto,
+            $request->boolean('remove_profile_photo'),
+        );
 
         $customer->fill([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
+            'profile_photo_path' => $newPhoto,
         ]);
 
         if ($emailChanged) {
@@ -104,6 +127,8 @@ class CustomerController extends Controller
         }
 
         $customer->save();
+        $photos->deleteReplaced($previousPhoto, $newPhoto);
+        $addresses->syncProfileAddress($customer, $data);
 
         if ($emailChanged && SiteSetting::getValue('require_email_verification', '0') === '1') {
             $customer->sendEmailVerificationNotification();
@@ -118,7 +143,7 @@ class CustomerController extends Controller
         return redirect($destination)->with('success', 'Customer account updated.');
     }
 
-    public function destroy(User $customer): RedirectResponse
+    public function destroy(User $customer, ProfilePhotoManager $photos): RedirectResponse
     {
         $this->ensureCustomer($customer);
 
@@ -126,8 +151,10 @@ class CustomerController extends Controller
             return back()->with('error', 'This customer has order history and cannot be deleted.');
         }
 
+        $profilePhoto = $customer->profile_photo_path;
         $this->log('customer.deleted', $customer);
         $customer->delete();
+        $photos->deleteReplaced($profilePhoto, null);
 
         return redirect()->route('admin.customers.index')->with('success', 'Customer account deleted.');
     }
@@ -149,14 +176,20 @@ class CustomerController extends Controller
         return view('admin.activity.index', ['logs' => ActivityLog::with('user')->latest()->paginate(25)]);
     }
 
-    private function validatedCustomer(Request $request, ?User $customer = null, bool $creating = false): array
-    {
+    private function validatedCustomer(
+        Request $request,
+        CustomerAddressManager $addresses,
+        ?User $customer = null,
+        bool $creating = false,
+    ): array {
         return $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customer?->id)],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_profile_photo' => ['nullable', 'boolean'],
             'password' => [$creating ? 'required' : 'nullable', 'confirmed', Rules\Password::defaults()],
-        ]);
+        ] + $addresses->validationRules());
     }
 
     private function ensureCustomer(User $customer): void

@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -41,6 +43,52 @@ class ProfileTest extends TestCase
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_user_can_update_profile_photo_and_primary_address(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('profiles/previous.jpg', 'previous photo');
+        $user = User::factory()->create(['profile_photo_path' => 'profiles/previous.jpg']);
+        $address = $user->addresses()->create([
+            'label' => 'Home',
+            'recipient_name' => $user->name,
+            'phone' => '1111111111',
+            'address_line' => 'Old address',
+            'city' => 'Old city',
+            'state' => 'Old state',
+            'postal_code' => '100000',
+            'is_default' => true,
+        ]);
+
+        $response = $this->actingAs($user)->patch('/profile', [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => '9876543210',
+            'profile_photo' => UploadedFile::fake()->image('new-photo.jpg'),
+            'address_line' => '22 New Road',
+            'address_phone' => '9876543211',
+            'city' => 'Greater Noida',
+            'state' => 'Uttar Pradesh',
+            'postal_code' => '201318',
+            'landmark' => 'Near the market',
+        ]);
+
+        $response->assertSessionHasNoErrors()->assertRedirect('/profile');
+        $user->refresh();
+        $this->assertNotSame('profiles/previous.jpg', $user->profile_photo_path);
+        Storage::disk('local')->assertExists($user->profile_photo_path);
+        Storage::disk('local')->assertMissing('profiles/previous.jpg');
+        $this->get(route('profile.photo', $user))->assertOk();
+        $otherUser = User::factory()->create();
+        $this->actingAs($otherUser)->get(route('profile.photo', $user))->assertForbidden();
+        $this->assertDatabaseHas('addresses', [
+            'id' => $address->id,
+            'address_line' => '22 New Road',
+            'phone' => '9876543211',
+            'city' => 'Greater Noida',
+            'is_default' => true,
+        ]);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

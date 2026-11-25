@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\Support\CustomerAddressManager;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,7 +15,7 @@ class ProfileUpdateRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
+    public function rules(CustomerAddressManager $addresses): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -27,6 +28,8 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'phone' => ['nullable', 'string', 'max:20'],
-        ];
+            'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_profile_photo' => ['nullable', 'boolean'],
+        ] + $addresses->validationRules();
     }
 }

@@ -11,12 +11,32 @@
     </div>
 </div>
 <section class="admin-panel">
+    <div class="customer-admin-identity">
+        <div class="profile-photo-current">
+            @if($customer->profile_photo_path)
+                <img src="{{ route('profile.photo', $customer) }}" alt="{{ $customer->name }} profile photo">
+            @else
+                <span>{{ str($customer->name)->substr(0, 1)->upper() }}</span>
+            @endif
+        </div>
+        <div><strong>{{ $customer->name }}</strong><span>Customer profile</span></div>
+    </div>
     <div class="form-grid">
         <div><span class="muted">Email</span><p><a class="text-link" href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></p></div>
         <div><span class="muted">Phone</span><p>{{ $customer->phone ?: '—' }}</p></div>
         <div><span class="muted">Email verification</span><p><span class="status-pill">{{ $customer->email_verified_at ? 'Verified' : 'Pending' }}</span></p></div>
         <div><span class="muted">Customer since</span><p>{{ $customer->created_at->format('d M Y') }}</p></div>
         <div><span class="muted">Total orders</span><p>{{ $customer->orders_count }}</p></div>
+    </div>
+    <div class="customer-admin-address">
+        <h2>Primary delivery address</h2>
+        @if($address)
+            <p>{{ $address->address_line }}@if($address->landmark), {{ $address->landmark }}@endif</p>
+            <p>{{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}</p>
+            <p>{{ $address->recipient_name }} · {{ $address->phone }}</p>
+        @else
+            <p class="muted">No delivery address saved.</p>
+        @endif
     </div>
 </section>
 <section class="admin-panel">
