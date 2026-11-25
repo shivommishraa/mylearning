@@ -1,14 +1,20 @@
 <x-guest-layout>
+    <div class="auth-intro">
+        <span class="eyebrow">Your SSG MART account</span>
+        <h1>Welcome back.</h1>
+        <p>Sign in with the email or mobile number linked to your account.</p>
+    </div>
+
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+        <div class="auth-form-field">
+            <x-input-label for="login" :value="__('Email or mobile number')" />
+            <x-text-input id="login" class="block mt-1 w-full" type="text" name="login" :value="old('login', old('email'))" required autofocus autocomplete="username" />
+            <x-input-error :messages="$errors->get('login')" class="mt-2" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
@@ -45,8 +51,8 @@
         </div>
     </form>
 
-    <p class="text-sm text-gray-600 text-center mt-4">
+    <p class="auth-login-register">
         New to SSG MART?
-        <a class="underline font-semibold text-gray-800 hover:text-gray-900" href="{{ route('register') }}">Create an account</a>
+        <a href="{{ route('register') }}">Create an account</a>
     </p>
 </x-guest-layout>

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Navigation menus')
 @section('content')
-<div class="admin-title"><div><h1>Navigation menus</h1><p>Create header and footer menus with submenus. Disabled links and links under disabled parents stay hidden.</p></div></div>
+<div class="admin-title"><div><h1>Navigation menus</h1><p>Manage header, footer and customer account menus with submenus. Disabled links and links under disabled parents stay hidden.</p></div></div>
 @can('menus.create')<form class="admin-panel" method="POST" action="{{ route('admin.menus.store') }}">@csrf<h2>Add a menu or submenu item</h2>@include('admin.navigation.fields',['item'=>null,'parentItems'=>$parentItems])<button class="button button-small">Add menu item</button></form>@endcan
 <section class="admin-panel"><div class="table-wrap"><table class="data-table"><thead><tr><th>Label</th><th>Parent</th><th>Destination</th><th>Menu</th><th>Order</th><th>Visibility</th><th>Manage</th></tr></thead><tbody>
 @forelse($items as $item)<tr><td><strong>{{ $item->label }}</strong></td><td>{{ $item->parent?->label ?? '—' }}</td><td><a href="{{ $item->url }}" class="text-link">{{ Str::limit($item->url,55) }}</a></td><td>{{ ucfirst($item->location) }}</td><td>{{ $item->sort_order }}</td><td><span class="status-pill">{{ $item->is_active ? 'Enabled' : 'Disabled' }}</span></td><td>

@@ -1,15 +1,15 @@
 @php($photoName = $profileUser->name ?: old('name', 'Customer'))
 <div class="profile-photo-field" data-photo-editor>
-    <div class="profile-photo-current" data-photo-preview>
+    <button class="profile-photo-current" type="button" data-photo-preview data-photo-open aria-label="View and edit profile photo">
         @if($profileUser->profile_photo_path)
             <img src="{{ route('profile.photo', $profileUser) }}" alt="{{ $photoName }} profile photo" data-photo-preview-image>
         @else
             <span data-photo-placeholder>{{ str($photoName)->substr(0, 1)->upper() }}</span>
         @endif
-    </div>
+    </button>
     <div class="profile-photo-controls">
         <strong>Profile photo <span class="optional-note">Optional</span></strong>
-        <p>Choose an image, then crop, zoom or rotate it before saving.</p>
+        <p>Choose the area to keep. Click your current photo to crop it again.</p>
         <input class="profile-photo-input" id="{{ $photoInputId }}" type="file" name="profile_photo" accept="image/jpeg,image/png,image/webp" data-photo-input aria-describedby="{{ $photoInputId }}-help">
         <label class="button button-light button-small" for="{{ $photoInputId }}">Choose photo</label>
         <small id="{{ $photoInputId }}-help">JPG, PNG or WebP · up to 5 MB</small>
@@ -30,15 +30,11 @@
                 <div>
                     <span class="eyebrow">Photo editor</span>
                     <h2 id="{{ $photoInputId }}-crop-title">Make it yours</h2>
-                    <p>Drag the image to adjust the crop.</p>
+                    <p>Drag the square to move it, or drag its corner to change how much is cropped.</p>
                 </div>
                 <button class="photo-crop-close" type="button" aria-label="Close photo editor" data-crop-cancel>&times;</button>
             </header>
             <canvas class="photo-crop-canvas" width="320" height="320" data-crop-canvas aria-label="Square profile photo crop preview"></canvas>
-            <label class="photo-crop-zoom">
-                <span>Zoom</span>
-                <input type="range" min="1" max="3" step="0.01" value="1" data-crop-zoom>
-            </label>
             <div class="photo-crop-actions">
                 <button class="button button-light button-small" type="button" data-crop-rotate="-90">Rotate left</button>
                 <button class="button button-light button-small" type="button" data-crop-rotate="90">Rotate right</button>

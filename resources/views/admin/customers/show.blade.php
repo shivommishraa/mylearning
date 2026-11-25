@@ -25,6 +25,9 @@
         <div><span class="muted">Email</span><p><a class="text-link" href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></p></div>
         <div><span class="muted">Phone</span><p>{{ $customer->phone ?: '—' }}</p></div>
         <div><span class="muted">Email verification</span><p><span class="status-pill">{{ $customer->email_verified_at ? 'Verified' : 'Pending' }}</span></p></div>
+        <div><span class="muted">Father / Husband name</span><p>{{ $customer->father_husband_name ?: '—' }}</p></div>
+        <div><span class="muted">Date of birth</span><p>{{ $customer->date_of_birth?->format('d M Y') ?: '—' }}</p></div>
+        <div><span class="muted">Gender</span><p>{{ $customer->gender ? str($customer->gender)->replace('_', ' ')->title() : '—' }}</p></div>
         <div><span class="muted">Customer since</span><p>{{ $customer->created_at->format('d M Y') }}</p></div>
         <div><span class="muted">Total orders</span><p>{{ $customer->orders_count }}</p></div>
     </div>

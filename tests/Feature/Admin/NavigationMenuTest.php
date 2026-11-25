@@ -133,6 +133,21 @@ class NavigationMenuTest extends TestCase
             ->assertDontSee('Disabled child');
     }
 
+    public function test_account_navigation_uses_only_enabled_admin_managed_items(): void
+    {
+        $user = User::factory()->create();
+        $orderHistory = NavigationItem::where('location', 'account')
+            ->where('url', '/account/orders')
+            ->firstOrFail();
+        $orderHistory->update(['is_active' => false]);
+
+        $this->actingAs($user)->get('/account')
+            ->assertOk()
+            ->assertSee('Your overview')
+            ->assertSee('Personal details')
+            ->assertDontSee('href="/account/orders"', false);
+    }
+
     public function test_admin_menu_actions_require_the_matching_super_admin_granted_permission(): void
     {
         $admin = User::factory()->create();

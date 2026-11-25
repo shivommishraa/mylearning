@@ -37,26 +37,39 @@ class ProfileController extends Controller
         $data = $request->validated();
         $user = $request->user();
         $previousPhoto = $user->profile_photo_path;
-        $newPhoto = $photos->save(
-            $data['profile_photo'] ?? null,
-            $previousPhoto,
-            $request->boolean('remove_profile_photo'),
-        );
+        $hasAdditionalDetails = $request->boolean('additional_details');
+        $newPhoto = $hasAdditionalDetails
+            ? $photos->save(
+                $data['profile_photo'] ?? null,
+                $previousPhoto,
+                $request->boolean('remove_profile_photo'),
+            )
+            : $previousPhoto;
 
-        $user->fill([
+        $profileData = [
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
-            'profile_photo_path' => $newPhoto,
-        ]);
+        ];
+        if ($hasAdditionalDetails) {
+            $profileData += [
+                'father_husband_name' => $data['father_husband_name'] ?? null,
+                'date_of_birth' => $data['date_of_birth'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'profile_photo_path' => $newPhoto,
+            ];
+        }
+        $user->fill($profileData);
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
 
         $user->save();
-        $photos->deleteReplaced($previousPhoto, $newPhoto);
-        $addresses->syncProfileAddress($user, $data);
+        if ($hasAdditionalDetails) {
+            $photos->deleteReplaced($previousPhoto, $newPhoto);
+            $addresses->syncProfileAddress($user, $data);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

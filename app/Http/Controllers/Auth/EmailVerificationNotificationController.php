@@ -14,7 +14,10 @@ class EmailVerificationNotificationController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        if (SiteSetting::getValue('require_email_verification', '0') !== '1') {
+        if (
+            SiteSetting::getValue('require_email_verification', '0') !== '1'
+            || ! filled($request->user()->email)
+        ) {
             return redirect()->intended(route('dashboard', absolute: false));
         }
 

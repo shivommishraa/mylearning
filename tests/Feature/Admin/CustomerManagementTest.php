@@ -165,6 +165,9 @@ class CustomerManagementTest extends TestCase
             'name' => 'Profile Customer',
             'email' => 'profile.customer@example.com',
             'phone' => '9876543210',
+            'father_husband_name' => 'Ramesh Sharma',
+            'date_of_birth' => '1990-04-15',
+            'gender' => 'female',
             'profile_photo' => UploadedFile::fake()->image('profile.png'),
             'address_line' => '12 Green Avenue',
             'address_phone' => '9876543211',
@@ -181,12 +184,22 @@ class CustomerManagementTest extends TestCase
         $this->get(route('admin.customers.show', $customer))
             ->assertOk()
             ->assertSee(route('profile.photo', $customer))
-            ->assertSee('12 Green Avenue');
+            ->assertSee('12 Green Avenue')
+            ->assertSee('Ramesh Sharma')
+            ->assertSee('Female');
+        $this->get(route('admin.customers.edit', $customer))
+            ->assertOk()
+            ->assertSee('data-photo-open', false)
+            ->assertSee('data-crop-canvas', false)
+            ->assertDontSee('data-crop-zoom', false);
         $this->get(route('profile.photo', $customer))->assertOk();
 
         $this->put(route('admin.customers.update', $customer), [
             'name' => 'Profile Customer',
             'email' => 'profile.customer@example.com',
+            'father_husband_name' => 'Updated father',
+            'date_of_birth' => '1991-05-16',
+            'gender' => 'other',
             'profile_photo' => UploadedFile::fake()->image('updated-profile.png'),
             'address_line' => '22 New Road',
             'address_phone' => '9876543212',
@@ -205,6 +218,11 @@ class CustomerManagementTest extends TestCase
             'phone' => '9876543212',
             'city' => 'Noida',
             'is_default' => true,
+        ]);
+        $this->assertDatabaseHas('users', [
+            'id' => $customer->id,
+            'father_husband_name' => 'Updated father',
+            'gender' => 'other',
         ]);
     }
 }

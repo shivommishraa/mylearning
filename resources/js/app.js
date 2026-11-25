@@ -697,29 +697,224 @@ document.querySelectorAll('[data-welcome-popup]').forEach((popup) => {
     showTimer = window.setTimeout(openPopup, Number(popup.dataset.displayDelay || 0) * 1000);
 });
 
+document.querySelectorAll('[data-contact-pair]').forEach((form) => {
+    const email = form.querySelector('[data-contact-email]');
+    const phone = form.querySelector('[data-contact-phone]');
+
+    if (!email || !phone) {
+        return;
+    }
+
+    const syncRequiredFields = () => {
+        const hasEmail = email.value.trim() !== '';
+        const hasPhone = phone.value.trim() !== '';
+        email.required = !hasPhone;
+        phone.required = !hasEmail;
+    };
+
+    email.addEventListener('input', syncRequiredFields);
+    phone.addEventListener('input', syncRequiredFields);
+    syncRequiredFields();
+});
+
+document.querySelectorAll('[data-validated-form]').forEach((form) => {
+    const fields = [...form.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="file"]):not([type="submit"]):not([type="button"]), select, textarea')];
+    const email = form.querySelector('[data-contact-email]');
+    const phone = form.querySelector('[data-contact-phone]');
+    const password = form.querySelector('[data-password-field]');
+    const confirmation = form.querySelector('[data-password-confirmation]');
+    const serverErrors = new WeakMap();
+    const clientMessages = new WeakMap();
+    let submitted = false;
+
+    const wrapperFor = (field) => field.closest('.auth-form-field, .customer-profile-field') || field.parentElement;
+    const serverErrorFor = (field) => {
+        const wrapper = wrapperFor(field);
+        const existing = wrapper?.querySelector('.field-error, .text-red-600');
+
+        return existing && !existing.hasAttribute('data-client-validation-message') && existing.textContent.trim()
+            ? existing
+            : null;
+    };
+
+    const clearServerError = (field) => {
+        const serverError = serverErrors.get(field);
+        if (serverError && (field.value !== field.dataset.validationInitialValue || field.dataset.contactValueChanged === 'true')) {
+            serverError.remove();
+            serverErrors.delete(field);
+        }
+    };
+
+    const clientMessageFor = (field) => {
+        let message = clientMessages.get(field);
+        if (!message) {
+            message = document.createElement('p');
+            message.className = 'field-error client-validation-message';
+            message.dataset.clientValidationMessage = '';
+            wrapperFor(field)?.append(message);
+            clientMessages.set(field, message);
+        }
+
+        return message;
+    };
+
+    const messageFor = (field) => {
+        if ((field === email || field === phone) && !email?.value.trim() && !phone?.value.trim()) {
+            return 'Enter an email address or mobile number.';
+        }
+        if (field.validity.valueMissing) {
+            const label = wrapperFor(field)?.querySelector('label')?.textContent.replace(/\s+/g, ' ').trim();
+            return `${label || 'This field'} is required.`;
+        }
+        if (field.validity.typeMismatch && field.type === 'email') {
+            return 'Enter a valid email address.';
+        }
+
+        return field.validationMessage || 'Check this field and try again.';
+    };
+
+    const updateField = (field, force = false) => {
+        if (field.disabled) {
+            return true;
+        }
+
+        clearServerError(field);
+        const serverError = serverErrors.get(field);
+        const hasValue = field.value.trim() !== '';
+        const shouldValidate = Boolean(serverError) || ((force || submitted || field.dataset.validationTouched === 'true') && (field.required || hasValue));
+        if (!shouldValidate) {
+            field.classList.remove('is-invalid', 'is-valid');
+            field.removeAttribute('aria-invalid');
+            clientMessages.get(field)?.remove();
+            clientMessages.delete(field);
+            return true;
+        }
+
+        const valid = field.validity.valid && !serverError;
+        field.classList.toggle('is-invalid', !valid);
+        field.classList.toggle('is-valid', valid);
+        field.setAttribute('aria-invalid', String(!valid));
+
+        const clientMessage = clientMessages.get(field);
+        if (!valid && !serverError) {
+            const message = clientMessageFor(field);
+            message.textContent = messageFor(field);
+        } else {
+            clientMessage?.remove();
+            clientMessages.delete(field);
+        }
+
+        return valid;
+    };
+
+    const syncPasswordConfirmation = () => {
+        if (password && confirmation) {
+            confirmation.setCustomValidity(
+                confirmation.value && confirmation.value !== password.value ? 'Passwords do not match.' : '',
+            );
+        }
+    };
+
+    fields.forEach((field) => {
+        field.dataset.validationInitialValue = field.value;
+        const serverError = serverErrorFor(field);
+        if (serverError) {
+            serverErrors.set(field, serverError);
+            field.classList.add('is-invalid');
+            field.setAttribute('aria-invalid', 'true');
+        }
+
+        field.addEventListener('input', () => {
+            field.dataset.validationTouched = 'true';
+            if (field === email || field === phone) {
+                field.dataset.contactValueChanged = 'true';
+                clearServerError(field);
+                const otherContact = field === email ? phone : email;
+                if (otherContact && !otherContact.value.trim()) {
+                    otherContact.dataset.contactValueChanged = 'true';
+                    clearServerError(otherContact);
+                }
+            } else {
+                clearServerError(field);
+            }
+
+            syncPasswordConfirmation();
+            updateField(field);
+            if ((field === email || field === phone) && email && phone) {
+                updateField(field === email ? phone : email);
+            }
+            if (field === password && confirmation) {
+                updateField(confirmation);
+            }
+        });
+
+        field.addEventListener('blur', () => {
+            field.dataset.validationTouched = 'true';
+            syncPasswordConfirmation();
+            updateField(field);
+        });
+    });
+
+    form.addEventListener('invalid', (event) => {
+        submitted = true;
+        if (fields.includes(event.target)) {
+            updateField(event.target, true);
+        }
+    }, true);
+
+    form.addEventListener('submit', (event) => {
+        submitted = true;
+        syncPasswordConfirmation();
+        const invalidFields = fields.filter((field) => !updateField(field, true));
+
+        if (invalidFields.length) {
+            event.preventDefault();
+            invalidFields[0].focus();
+        }
+    });
+});
+
+document.querySelectorAll('[data-additional-details-toggle]').forEach((toggle) => {
+    const section = toggle.closest('[data-additional-details]');
+    const panel = section?.querySelector('[data-additional-details-panel]');
+
+    if (!panel) {
+        return;
+    }
+
+    const syncAdditionalDetails = () => {
+        panel.hidden = !toggle.checked;
+        panel.querySelectorAll('input, select, textarea').forEach((field) => {
+            field.disabled = !toggle.checked;
+        });
+    };
+
+    toggle.addEventListener('change', syncAdditionalDetails);
+    syncAdditionalDetails();
+});
+
 document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
     const input = editor.querySelector('[data-photo-input]');
     const preview = editor.querySelector('[data-photo-preview]');
     const backdrop = editor.querySelector('[data-crop-backdrop]');
     const canvas = editor.querySelector('[data-crop-canvas]');
-    const zoomControl = editor.querySelector('[data-crop-zoom]');
     const status = editor.querySelector('[data-photo-status]');
     const errorMessage = editor.querySelector('[data-crop-error]');
     const removeCheckbox = editor.querySelector('[data-photo-remove]');
     const context = canvas?.getContext('2d');
 
-    if (!input || !preview || !backdrop || !canvas || !zoomControl || !context) {
+    if (!input || !preview || !backdrop || !canvas || !context) {
         return;
     }
 
     let image = null;
     let rotation = 0;
-    let zoom = 1;
-    let offsetX = 0;
-    let offsetY = 0;
+    let imageRect = null;
+    let selection = null;
     let pointer = null;
     let committedFile = null;
     let previousFocus = null;
+    const outputSize = 320;
 
     const showError = (message) => {
         errorMessage.textContent = message;
@@ -728,14 +923,32 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
         status.classList.add('is-error');
     };
 
-    const clampOffset = (scale) => {
+    const getImageRect = () => {
         const quarterTurn = Math.abs(rotation) % 180 === 90;
-        const imageWidth = (quarterTurn ? image.height : image.width) * scale;
-        const imageHeight = (quarterTurn ? image.width : image.height) * scale;
-        const maxX = Math.max(0, (imageWidth - canvas.width) / 2);
-        const maxY = Math.max(0, (imageHeight - canvas.height) / 2);
-        offsetX = Math.max(-maxX, Math.min(maxX, offsetX));
-        offsetY = Math.max(-maxY, Math.min(maxY, offsetY));
+        const baseWidth = quarterTurn ? image.height : image.width;
+        const baseHeight = quarterTurn ? image.width : image.height;
+        const scale = Math.min(canvas.width / baseWidth, canvas.height / baseHeight);
+        const width = baseWidth * scale;
+        const height = baseHeight * scale;
+
+        return {
+            x: (canvas.width - width) / 2,
+            y: (canvas.height - height) / 2,
+            width,
+            height,
+            scale,
+            baseWidth,
+            baseHeight,
+        };
+    };
+
+    const resetSelection = () => {
+        const size = Math.min(imageRect.width, imageRect.height);
+        selection = {
+            x: imageRect.x + (imageRect.width - size) / 2,
+            y: imageRect.y + (imageRect.height - size) / 2,
+            size,
+        };
     };
 
     const drawCrop = () => {
@@ -743,21 +956,40 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
             return;
         }
 
-        const quarterTurn = Math.abs(rotation) % 180 === 90;
-        const baseWidth = quarterTurn ? image.height : image.width;
-        const baseHeight = quarterTurn ? image.width : image.height;
-        const scale = Math.max(canvas.width / baseWidth, canvas.height / baseHeight) * zoom;
-        clampOffset(scale);
+        imageRect = getImageRect();
 
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.save();
-        context.beginPath();
-        context.rect(0, 0, canvas.width, canvas.height);
-        context.clip();
-        context.translate(canvas.width / 2 + offsetX, canvas.height / 2 + offsetY);
+        context.translate(canvas.width / 2, canvas.height / 2);
         context.rotate((rotation * Math.PI) / 180);
-        context.drawImage(image, (-image.width * scale) / 2, (-image.height * scale) / 2, image.width * scale, image.height * scale);
+        context.drawImage(
+            image,
+            (-image.width * imageRect.scale) / 2,
+            (-image.height * imageRect.scale) / 2,
+            image.width * imageRect.scale,
+            image.height * imageRect.scale,
+        );
         context.restore();
+
+        if (!selection) {
+            resetSelection();
+        }
+
+        const right = selection.x + selection.size;
+        const bottom = selection.y + selection.size;
+        context.fillStyle = 'rgba(12, 24, 16, 0.58)';
+        context.fillRect(imageRect.x, imageRect.y, imageRect.width, selection.y - imageRect.y);
+        context.fillRect(imageRect.x, bottom, imageRect.width, imageRect.y + imageRect.height - bottom);
+        context.fillRect(imageRect.x, selection.y, selection.x - imageRect.x, selection.size);
+        context.fillRect(right, selection.y, imageRect.x + imageRect.width - right, selection.size);
+        context.strokeStyle = '#ffffff';
+        context.lineWidth = 2;
+        context.strokeRect(selection.x + 1, selection.y + 1, selection.size - 2, selection.size - 2);
+        context.fillStyle = '#ffffff';
+        context.fillRect(right - 7, bottom - 7, 14, 14);
+        context.strokeStyle = '#236b45';
+        context.lineWidth = 2;
+        context.strokeRect(right - 7, bottom - 7, 14, 14);
     };
 
     const setInputFile = (file) => {
@@ -770,6 +1002,8 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
         backdrop.hidden = true;
         document.body.classList.remove('photo-crop-open');
         image = null;
+        imageRect = null;
+        selection = null;
         pointer = null;
 
         if (restoreFile) {
@@ -791,10 +1025,7 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
             URL.revokeObjectURL(objectUrl);
             image = source;
             rotation = 0;
-            zoom = 1;
-            offsetX = 0;
-            offsetY = 0;
-            zoomControl.value = '1';
+            selection = null;
             errorMessage.hidden = true;
             errorMessage.textContent = '';
             previousFocus = document.activeElement;
@@ -815,6 +1046,39 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
         };
 
         source.src = objectUrl;
+    };
+
+    const openCurrentPhoto = async () => {
+        const stagedFile = committedFile || input.files?.[0];
+        if (stagedFile) {
+            openEditor(stagedFile);
+            return;
+        }
+
+        const imageUrl = preview.querySelector('[data-photo-preview-image]')?.src;
+        if (!imageUrl) {
+            input.click();
+            return;
+        }
+
+        status.textContent = 'Loading saved photo...';
+        status.classList.remove('is-error');
+        try {
+            const response = await fetch(imageUrl, { credentials: 'same-origin' });
+            if (!response.ok) {
+                throw new Error('Photo request failed.');
+            }
+
+            const blob = await response.blob();
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) {
+                throw new Error('Photo response was not a supported image.');
+            }
+            const file = new File([blob], 'profile-photo.jpg', { type: blob.type || 'image/jpeg' });
+            status.textContent = '';
+            openEditor(file);
+        } catch {
+            showError('The saved photo could not be opened. Please choose another photo.');
+        }
     };
 
     const updatePreview = (dataUrl) => {
@@ -855,34 +1119,43 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
         openEditor(file);
     });
 
-    zoomControl.addEventListener('input', () => {
-        zoom = Number(zoomControl.value);
-        drawCrop();
-    });
-
     editor.querySelectorAll('[data-crop-rotate]').forEach((button) => {
         button.addEventListener('click', () => {
             rotation = (rotation + Number(button.dataset.cropRotate) + 360) % 360;
-            offsetX = 0;
-            offsetY = 0;
+            selection = null;
             drawCrop();
         });
     });
 
+    const getCanvasPoint = (event) => {
+        const bounds = canvas.getBoundingClientRect();
+        return {
+            x: (event.clientX - bounds.left) * (canvas.width / bounds.width),
+            y: (event.clientY - bounds.top) * (canvas.height / bounds.height),
+        };
+    };
+
+    const clampPoint = (point) => ({
+        x: Math.max(imageRect.x, Math.min(imageRect.x + imageRect.width, point.x)),
+        y: Math.max(imageRect.y, Math.min(imageRect.y + imageRect.height, point.y)),
+    });
+
     canvas.addEventListener('pointerdown', (event) => {
-        if (!image) {
+        if (!image || !imageRect || !selection) {
             return;
         }
 
-        const bounds = canvas.getBoundingClientRect();
+        const point = clampPoint(getCanvasPoint(event));
+        const right = selection.x + selection.size;
+        const bottom = selection.y + selection.size;
+        const nearHandle = Math.abs(point.x - right) <= 18 && Math.abs(point.y - bottom) <= 18;
+        const inSelection = point.x >= selection.x && point.x <= right && point.y >= selection.y && point.y <= bottom;
         pointer = {
             id: event.pointerId,
-            x: event.clientX,
-            y: event.clientY,
-            offsetX,
-            offsetY,
-            scaleX: canvas.width / bounds.width,
-            scaleY: canvas.height / bounds.height,
+            mode: nearHandle ? 'resize' : inSelection ? 'move' : 'draw',
+            startX: point.x,
+            startY: point.y,
+            startSelection: { ...selection },
         };
         canvas.setPointerCapture(event.pointerId);
     });
@@ -892,15 +1165,50 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
             return;
         }
 
-        offsetX = pointer.offsetX + (event.clientX - pointer.x) * pointer.scaleX;
-        offsetY = pointer.offsetY + (event.clientY - pointer.y) * pointer.scaleY;
+        const point = clampPoint(getCanvasPoint(event));
+        const deltaX = point.x - pointer.startX;
+        const deltaY = point.y - pointer.startY;
+        const original = pointer.startSelection;
+
+        if (pointer.mode === 'move') {
+            selection = {
+                ...original,
+                x: Math.max(imageRect.x, Math.min(imageRect.x + imageRect.width - original.size, original.x + deltaX)),
+                y: Math.max(imageRect.y, Math.min(imageRect.y + imageRect.height - original.size, original.y + deltaY)),
+            };
+        } else if (pointer.mode === 'resize') {
+            const maxSize = Math.min(imageRect.x + imageRect.width - original.x, imageRect.y + imageRect.height - original.y);
+            selection = {
+                ...original,
+                size: Math.max(Math.min(32, maxSize), Math.min(maxSize, original.size + ((deltaX + deltaY) / 2))),
+            };
+        } else {
+            const signX = deltaX < 0 ? -1 : 1;
+            const signY = deltaY < 0 ? -1 : 1;
+            const maxX = signX < 0 ? pointer.startX - imageRect.x : imageRect.x + imageRect.width - pointer.startX;
+            const maxY = signY < 0 ? pointer.startY - imageRect.y : imageRect.y + imageRect.height - pointer.startY;
+            const size = Math.min(Math.max(Math.abs(deltaX), Math.abs(deltaY)), maxX, maxY);
+            selection = {
+                x: signX < 0 ? pointer.startX - size : pointer.startX,
+                y: signY < 0 ? pointer.startY - size : pointer.startY,
+                size,
+            };
+        }
+
         drawCrop();
     });
 
     canvas.addEventListener('pointerup', (event) => {
         if (pointer?.id === event.pointerId) {
+            if (pointer.mode === 'draw' && selection.size < 32) {
+                selection = pointer.startSelection;
+                drawCrop();
+            }
             pointer = null;
         }
+    });
+    canvas.addEventListener('pointercancel', () => {
+        pointer = null;
     });
 
     editor.querySelectorAll('[data-crop-cancel]').forEach((button) => {
@@ -913,8 +1221,33 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
         }
     });
 
+    editor.addEventListener('open-current-photo', openCurrentPhoto);
+
     editor.querySelector('[data-crop-apply]')?.addEventListener('click', () => {
-        canvas.toBlob((blob) => {
+        if (!image || !imageRect || !selection || selection.size <= 0) {
+            showError('Select an area of the photo before saving.');
+            return;
+        }
+
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = outputSize;
+        croppedCanvas.height = outputSize;
+        const croppedContext = croppedCanvas.getContext('2d');
+        if (!croppedContext) {
+            showError('The photo could not be cropped. Please try another image.');
+            return;
+        }
+
+        const cropX = (selection.x - imageRect.x) / imageRect.scale;
+        const cropY = (selection.y - imageRect.y) / imageRect.scale;
+        const cropSize = selection.size / imageRect.scale;
+        const outputScale = outputSize / cropSize;
+        croppedContext.setTransform(outputScale, 0, 0, outputScale, -cropX * outputScale, -cropY * outputScale);
+        croppedContext.translate(imageRect.baseWidth / 2, imageRect.baseHeight / 2);
+        croppedContext.rotate((rotation * Math.PI) / 180);
+        croppedContext.drawImage(image, -image.width / 2, -image.height / 2);
+
+        croppedCanvas.toBlob((blob) => {
             if (!blob) {
                 showError('The cropped photo could not be created. Please try another image.');
                 return;
@@ -923,7 +1256,10 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
             const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' });
             setInputFile(file);
             committedFile = file;
-            updatePreview(canvas.toDataURL('image/jpeg', 0.9));
+            updatePreview(croppedCanvas.toDataURL('image/jpeg', 0.9));
+            if (removeCheckbox) {
+                removeCheckbox.checked = false;
+            }
             status.textContent = 'Photo cropped and ready to save.';
             status.classList.remove('is-error');
             closeEditor(false);
@@ -935,4 +1271,14 @@ document.querySelectorAll('[data-photo-editor]').forEach((editor) => {
             closeEditor(true);
         }
     });
+});
+
+document.addEventListener('click', (event) => {
+    const trigger = event.target instanceof Element ? event.target.closest('[data-photo-open]') : null;
+    if (!trigger) {
+        return;
+    }
+
+    const editor = trigger.closest('[data-photo-editor]') || document.querySelector('[data-photo-editor]');
+    editor?.dispatchEvent(new Event('open-current-photo'));
 });

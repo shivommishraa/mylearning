@@ -17,6 +17,7 @@ class EnsureEmailIsVerifiedWhenRequired
             ! $user
             || SiteSetting::getValue('require_email_verification', '0') !== '1'
             || $user->hasAnyRole(['Super Admin', 'Admin'])
+            || ! filled($user->email)
             || $user->hasVerifiedEmail()
         ) {
             return $next($request);

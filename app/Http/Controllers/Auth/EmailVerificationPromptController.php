@@ -15,7 +15,10 @@ class EmailVerificationPromptController extends Controller
      */
     public function __invoke(Request $request): RedirectResponse|View
     {
-        if (SiteSetting::getValue('require_email_verification', '0') !== '1') {
+        if (
+            SiteSetting::getValue('require_email_verification', '0') !== '1'
+            || ! filled($request->user()->email)
+        ) {
             return redirect()->intended(route('dashboard', absolute: false));
         }
 

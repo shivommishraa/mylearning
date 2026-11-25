@@ -20,7 +20,10 @@ class ProfileTest extends TestCase
             ->actingAs($user)
             ->get('/profile');
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertSee('data-photo-open', false)
+            ->assertSee('data-crop-canvas', false)
+            ->assertDontSee('data-crop-zoom', false);
     }
 
     public function test_profile_information_can_be_updated(): void
@@ -65,7 +68,11 @@ class ProfileTest extends TestCase
             'name' => $user->name,
             'email' => $user->email,
             'phone' => '9876543210',
+            'additional_details' => '1',
             'profile_photo' => UploadedFile::fake()->image('new-photo.jpg'),
+            'father_husband_name' => 'Ramesh Sharma',
+            'date_of_birth' => '1990-04-15',
+            'gender' => 'female',
             'address_line' => '22 New Road',
             'address_phone' => '9876543211',
             'city' => 'Greater Noida',
@@ -88,6 +95,46 @@ class ProfileTest extends TestCase
             'phone' => '9876543211',
             'city' => 'Greater Noida',
             'is_default' => true,
+        ]);
+        $this->assertSame('Ramesh Sharma', $user->father_husband_name);
+        $this->assertSame('female', $user->gender);
+    }
+
+    public function test_profile_update_without_additional_details_keeps_existing_optional_data(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('profiles/existing.jpg', 'existing photo');
+        $user = User::factory()->create([
+            'father_husband_name' => 'Existing family name',
+            'date_of_birth' => '1990-04-15',
+            'gender' => 'female',
+            'profile_photo_path' => 'profiles/existing.jpg',
+        ]);
+        $address = $user->addresses()->create([
+            'label' => 'Home',
+            'recipient_name' => $user->name,
+            'phone' => '1111111111',
+            'address_line' => 'Existing address',
+            'city' => 'Existing city',
+            'state' => 'Existing state',
+            'postal_code' => '100000',
+            'is_default' => true,
+        ]);
+
+        $this->actingAs($user)->patch('/profile', [
+            'name' => 'Updated name',
+            'email' => $user->email,
+            'additional_details' => '0',
+        ])->assertSessionHasNoErrors();
+
+        $user->refresh();
+        $this->assertSame('Existing family name', $user->father_husband_name);
+        $this->assertSame('female', $user->gender);
+        $this->assertSame('profiles/existing.jpg', $user->profile_photo_path);
+        Storage::disk('local')->assertExists('profiles/existing.jpg');
+        $this->assertDatabaseHas('addresses', [
+            'id' => $address->id,
+            'address_line' => 'Existing address',
         ]);
     }
 

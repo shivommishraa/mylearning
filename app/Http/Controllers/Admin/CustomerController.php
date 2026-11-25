@@ -56,12 +56,15 @@ class CustomerController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
+            'father_husband_name' => $data['father_husband_name'] ?? null,
+            'date_of_birth' => $data['date_of_birth'] ?? null,
+            'gender' => $data['gender'] ?? null,
             'profile_photo_path' => $photoPath,
             'password' => Hash::make($data['password']),
         ]);
         $addresses->syncProfileAddress($customer, $data);
 
-        if (SiteSetting::getValue('require_email_verification', '0') === '1') {
+        if (SiteSetting::getValue('require_email_verification', '0') === '1' && filled($customer->email)) {
             event(new Registered($customer));
         }
 
@@ -115,6 +118,9 @@ class CustomerController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
+            'father_husband_name' => $data['father_husband_name'] ?? null,
+            'date_of_birth' => $data['date_of_birth'] ?? null,
+            'gender' => $data['gender'] ?? null,
             'profile_photo_path' => $newPhoto,
         ]);
 
@@ -130,7 +136,7 @@ class CustomerController extends Controller
         $photos->deleteReplaced($previousPhoto, $newPhoto);
         $addresses->syncProfileAddress($customer, $data);
 
-        if ($emailChanged && SiteSetting::getValue('require_email_verification', '0') === '1') {
+        if ($emailChanged && SiteSetting::getValue('require_email_verification', '0') === '1' && filled($customer->email)) {
             $customer->sendEmailVerificationNotification();
         }
 
@@ -182,10 +188,18 @@ class CustomerController extends Controller
         ?User $customer = null,
         bool $creating = false,
     ): array {
+        $phoneRules = ['nullable', 'string', 'max:20'];
+        if ($request->filled('phone') && (! $customer || $request->input('phone') !== $customer->phone)) {
+            $phoneRules[] = Rule::unique('users', 'phone')->ignore($customer?->id);
+        }
+
         return $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($customer?->id)],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => $phoneRules,
+            'father_husband_name' => ['nullable', 'string', 'max:120'],
+            'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
+            'gender' => ['nullable', Rule::in(['female', 'male', 'other', 'prefer_not_to_say'])],
             'profile_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_profile_photo' => ['nullable', 'boolean'],
             'password' => [$creating ? 'required' : 'nullable', 'confirmed', Rules\Password::defaults()],

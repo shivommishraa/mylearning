@@ -50,7 +50,7 @@ class NavigationController extends Controller
                     $fail('Use a relative site path or a secure HTTPS link.');
                 }
             }],
-            'location' => ['required', 'in:header,footer'],
+            'location' => ['required', 'in:header,footer,account'],
             'parent_id' => ['nullable', 'integer', 'exists:navigation_items,id'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
@@ -62,7 +62,7 @@ class NavigationController extends Controller
 
             if ($parent->parent_id !== null || $parent->location !== $data['location'] || ($current && $parent->is($current))) {
                 throw ValidationException::withMessages([
-                    'parent_id' => 'Choose a top-level menu in the same header or footer.',
+                    'parent_id' => 'Choose a top-level menu in the same location.',
                 ]);
             }
         }

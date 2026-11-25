@@ -8,15 +8,44 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <div class="announcement">A little more goodness in every basket · <strong>SSG MART</strong></div>
+    <div class="announcement">{{ $site['announcement_text'] }} <strong>· Free delivery over ₹{{ number_format((float) $site['free_delivery_minimum']) }}</strong></div>
     <header class="header"><div class="wrap header-main">
-        <a class="brand" href="{{ route('home') }}"><span class="brand-mark">S</span><span>SSG MART</span></a>
-        <nav class="nav" style="display:flex;flex:1;border:0;height:auto"><a href="{{ route('shop.index') }}">Shop</a><a href="{{ route('account') }}">My account</a><a href="{{ route('addresses.index') }}">Addresses</a><a href="{{ route('profile.edit') }}">Profile</a></nav>
+        <a class="brand" href="{{ route('home') }}"><span class="brand-mark">{{ strtoupper(substr($site['business_name'], 0, 1)) }}</span><span>{{ $site['business_name'] }}</span></a>
         <form method="POST" action="{{ route('logout') }}">@csrf<button class="button button-light button-small">Sign out</button></form>
-    </div></header>
+    </div>
+    @if(($navigationItems['header'] ?? collect())->isNotEmpty())
+        <nav class="wrap nav" data-menu>
+            @foreach(($navigationItems['header'] ?? collect()) as $item)
+                @if($item->children->isEmpty())
+                    <a href="{{ $item->url }}">{{ $item->label }}</a>
+                @else
+                    <div class="nav-group" data-nav-group>
+                        <a href="{{ $item->url }}">{{ $item->label }}</a>
+                        <button class="nav-submenu-toggle" type="button" data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true" aria-controls="app-nav-submenu-{{ $item->id }}" aria-label="Toggle {{ $item->label }} submenu"><span aria-hidden="true">⌄</span></button>
+                        <div class="nav-submenu" id="app-nav-submenu-{{ $item->id }}" data-nav-submenu>
+                            @foreach($item->children as $child)<a href="{{ $child->url }}">{{ $child->label }}</a>@endforeach
+                        </div>
+                    </div>
+                @endif
+            @endforeach
+        </nav>
+    @endif
+    </header>
     @if (session('success'))<div class="wrap alert alert-success">{{ session('success') }}</div>@endif
     @if ($errors->any())<div class="wrap alert alert-error"><ul style="margin:0;padding-left:18px">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     <main class="wrap" style="padding-top:28px;padding-bottom:40px">{{ $slot }}</main>
-    <footer class="footer"><div class="wrap footer-bottom" style="border-top:0;margin-top:0;padding-top:0"><span>© {{ now()->year }} SSG MART</span><a href="{{ route('home') }}">Back to the store →</a></div></footer>
+    <footer class="footer">
+        <div class="wrap footer-bottom" style="border-top:0;margin-top:0;padding-top:0">
+            <span>© {{ now()->year }} {{ $site['business_name'] }}. {{ $site['footer_tagline'] }}</span>
+            @if(($navigationItems['footer'] ?? collect())->isNotEmpty())
+                <nav class="footer-links" aria-label="Footer navigation" data-footer-menu>
+                    @foreach(($navigationItems['footer'] ?? collect()) as $item)
+                        <a href="{{ $item->url }}">{{ $item->label }}</a>
+                        @foreach($item->children as $child)<a href="{{ $child->url }}">{{ $child->label }}</a>@endforeach
+                    @endforeach
+                </nav>
+            @endif
+        </div>
+    </footer>
 </body>
 </html>

@@ -27,6 +27,27 @@
             <input id="customer-phone" type="tel" name="phone" value="{{ old('phone', $customer->phone) }}" maxlength="20">
         </div>
         <div class="admin-field">
+            <label for="customer-father-husband-name">Father / Husband name (optional)</label>
+            <input id="customer-father-husband-name" name="father_husband_name" value="{{ old('father_husband_name', $customer->father_husband_name) }}" maxlength="120">
+            @error('father_husband_name')<p class="field-error">{{ $message }}</p>@enderror
+        </div>
+        <div class="admin-field">
+            <label for="customer-date-of-birth">Date of birth (optional)</label>
+            <input id="customer-date-of-birth" type="date" name="date_of_birth" value="{{ old('date_of_birth', $customer->date_of_birth?->format('Y-m-d')) }}">
+            @error('date_of_birth')<p class="field-error">{{ $message }}</p>@enderror
+        </div>
+        <div class="admin-field">
+            <label for="customer-gender">Gender (optional)</label>
+            <select id="customer-gender" name="gender">
+                <option value="">Select if you wish</option>
+                <option value="female" @selected(old('gender', $customer->gender) === 'female')>Female</option>
+                <option value="male" @selected(old('gender', $customer->gender) === 'male')>Male</option>
+                <option value="other" @selected(old('gender', $customer->gender) === 'other')>Other</option>
+                <option value="prefer_not_to_say" @selected(old('gender', $customer->gender) === 'prefer_not_to_say')>Prefer not to say</option>
+            </select>
+            @error('gender')<p class="field-error">{{ $message }}</p>@enderror
+        </div>
+        <div class="admin-field">
             <label for="customer-password">{{ $customer->exists ? 'New password (optional)' : 'Password' }}</label>
             <input id="customer-password" type="password" name="password" autocomplete="new-password" {{ $customer->exists ? '' : 'required' }}>
         </div>
