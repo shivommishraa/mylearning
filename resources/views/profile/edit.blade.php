@@ -22,7 +22,7 @@
                 <span>{{ str($user->name)->substr(0, 1)->upper() }}</span>
             </div>
         @endif
-        <div>
+        <div class="customer-profile-copy">
             <span class="eyebrow">Your SSG MART account</span>
             <h1>Good to see you, {{ str($user->name)->before(' ') }}.</h1>
             <p>Keep your details up to date for a smoother, more personal shopping experience.</p>

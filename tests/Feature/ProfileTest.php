@@ -23,6 +23,9 @@ class ProfileTest extends TestCase
         $response->assertOk()
             ->assertSee('data-photo-open', false)
             ->assertSee('data-crop-canvas', false)
+            ->assertSee('header-profile-link', false)
+            ->assertSee('aria-label="My profile"', false)
+            ->assertSee(route('profile.edit'), false)
             ->assertDontSee('data-crop-zoom', false);
     }
 
@@ -41,6 +44,16 @@ class ProfileTest extends TestCase
         $this->assertArrayHasKey(1, $modal);
         $this->assertStringNotContainsString('data-photo-open', $modal[1]);
         $this->assertStringNotContainsString('Choose photo', $modal[1]);
+    }
+
+    public function test_profile_header_avatar_has_fixed_size_when_photo_is_missing(): void
+    {
+        $user = User::factory()->create(['profile_photo_path' => null]);
+
+        $this->actingAs($user)->get('/profile')
+            ->assertOk()
+            ->assertSee('<div class="customer-profile-hero-avatar">', false)
+            ->assertSee('class="customer-profile-copy"', false);
     }
 
     public function test_profile_information_can_be_updated(): void

@@ -60,7 +60,7 @@
                 </div>
             </form>
             <div class="header-actions">
-                <a class="header-link" href="{{ auth()->check() ? route('account') : route('login') }}" aria-label="{{ auth()->check() ? 'My account' : 'Sign in' }}"><span class="header-icon" aria-hidden="true">♙</span><span class="label">{{ auth()->check() ? 'My account' : 'Sign in' }}</span></a>
+                <a class="header-link {{ auth()->check() ? 'header-profile-link' : 'header-signin-link' }}" href="{{ auth()->check() ? route('profile.edit') : route('login') }}" aria-label="{{ auth()->check() ? 'My profile' : 'Sign in' }}"><span class="header-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg></span><span class="label">{{ auth()->check() ? 'My profile' : 'Sign in' }}</span></a>
                 @guest<a class="header-link" href="{{ route('register') }}" aria-label="Register"><span class="header-icon" aria-hidden="true">＋</span><span class="label">Register</span></a>@endguest
                 <a class="header-link" href="{{ route('cart.index') }}" aria-label="Basket"><span class="header-icon" aria-hidden="true">♧</span><span class="label">Basket</span><span class="cart-count">{{ array_sum(session('cart', [])) }}</span></a>
             </div>

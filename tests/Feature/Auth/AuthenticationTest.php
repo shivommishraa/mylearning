@@ -19,7 +19,7 @@ class AuthenticationTest extends TestCase
             ->assertSee(route('register'))
             ->assertSee('Email or mobile number')
             ->assertSee('Come on in')
-            ->assertSee('A few helpful links');
+            ->assertSee("We're easy to reach", false);
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
