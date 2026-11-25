@@ -96,7 +96,7 @@
     <footer class="footer">
         <div class="wrap footer-grid">
             <div><a class="brand" href="{{ route('home') }}"><span class="brand-mark">{{ strtoupper(substr($site['business_name'], 0, 1)) }}</span><span>{{ $site['business_name'] }}</span></a><p>Your neighbourhood store for pantry staples, household care and everyday essentials.</p><a href="https://wa.me/{{ preg_replace('/\D+/', '', $site['whatsapp']) }}" target="_blank" rel="noopener">Chat with us on WhatsApp ↗</a></div>
-            <div><h3>Come on in</h3><address>{{ $site['address'] }}</address><a href="https://maps.google.com/?q={{ urlencode($site['address']) }}" target="_blank" rel="noopener">Find us on Google Maps ↗</a></div>
+            <div><h3>Come on in</h3><address>{{ $site['address'] }}</address><a href="https://www.google.com/maps/dir/?api=1&amp;destination=28.5222018%2C77.40182545" target="_blank" rel="noopener">Find us on Google Maps ↗</a></div>
             @if(($navigationItems['footer'] ?? collect())->isNotEmpty())
                 <div><h3>A few helpful links</h3><nav class="footer-links" aria-label="Footer navigation" data-footer-menu>@foreach(($navigationItems['footer'] ?? collect()) as $item)<a href="{{ $item->url }}">{{ $item->label }}</a>@if($item->children->isNotEmpty())<div class="footer-submenu">@foreach($item->children as $child)<a href="{{ $child->url }}">{{ $child->label }}</a>@endforeach</div>@endif @endforeach</nav></div>
             @endif

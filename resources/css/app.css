@@ -280,7 +280,7 @@ img{max-width:100%;display:block}
 .footer-submenu{display:grid;gap:4px;margin:0 0 3px 12px;padding-left:9px;border-left:1px solid rgba(255,255,255,.2)}
 .footer-submenu a{color:#aabdad;font-size:11px}
 .footer-bottom{border-top:1px solid #ffffff20;margin-top:30px;padding-top:15px;display:flex;justify-content:space-between;color:#9eafa2;font-size:11px}
-.map-frame{height:220px;border:0;width:100%;border-radius:5px}
+.map-frame{height:clamp(280px,42vw,450px);border:0;width:100%;border-radius:12px}
 .contact-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px;padding-bottom:60px}
 .contact-info{background:#f7f9f4;padding:25px;border-radius:6px}
 .contact-item{padding:13px 0;border-bottom:1px solid #e5eae3}
