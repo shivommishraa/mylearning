@@ -326,8 +326,11 @@ document.addEventListener('submit', async (event) => {
 
 const storeMenuButton = document.querySelector('[data-menu-toggle]');
 const storeMenu = document.querySelector('[data-menu]');
+const storeMenuBackdrop = document.querySelector('[data-menu-backdrop]');
 
 if (storeMenuButton && storeMenu) {
+    const storeHeader = storeMenu.closest('.header');
+
     const closeStoreSubmenus = () => {
         storeMenu.querySelectorAll('[data-nav-group].is-open').forEach((group) => {
             group.classList.remove('is-open');
@@ -335,10 +338,31 @@ if (storeMenuButton && storeMenu) {
         });
     };
 
+    const updateStoreMenuBackdrop = () => {
+        if (!storeMenuBackdrop || !storeHeader || !storeMenu.classList.contains('open')) {
+            return;
+        }
+
+        const headerRect = storeHeader.getBoundingClientRect();
+        const top = Math.max(0, headerRect.top);
+        const menuHeight = Math.min(
+            storeMenu.scrollHeight,
+            Math.max(0, window.innerHeight - 130),
+            Math.max(0, window.innerHeight - headerRect.bottom),
+        );
+
+        storeMenuBackdrop.style.top = `${top}px`;
+        storeMenuBackdrop.style.height = `${Math.max(0, headerRect.bottom + menuHeight + 2 - top)}px`;
+    };
+
     const closeStoreMenu = () => {
         storeMenu.classList.remove('open');
         storeMenuButton.setAttribute('aria-expanded', 'false');
         storeMenuButton.setAttribute('aria-label', 'Open navigation');
+        storeHeader?.classList.remove('menu-open');
+        if (storeMenuBackdrop) {
+            storeMenuBackdrop.hidden = true;
+        }
         closeStoreSubmenus();
     };
 
@@ -346,6 +370,19 @@ if (storeMenuButton && storeMenu) {
         const isOpen = storeMenu.classList.toggle('open');
         storeMenuButton.setAttribute('aria-expanded', String(isOpen));
         storeMenuButton.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+        storeHeader?.classList.toggle('menu-open', isOpen);
+        if (storeMenuBackdrop) {
+            storeMenuBackdrop.hidden = !isOpen;
+            if (isOpen) {
+                updateStoreMenuBackdrop();
+                requestAnimationFrame(updateStoreMenuBackdrop);
+            }
+        }
+    });
+
+    storeMenuBackdrop?.addEventListener('click', () => {
+        closeStoreMenu();
+        storeMenuButton.focus();
     });
 
     storeMenu.querySelectorAll('a').forEach((link) => {
@@ -365,9 +402,22 @@ if (storeMenuButton && storeMenu) {
         });
     });
 
+    storeMenu.addEventListener('transitionend', (event) => {
+        if (event.propertyName === 'max-height') {
+            updateStoreMenuBackdrop();
+        }
+    });
+
+    window.addEventListener('resize', updateStoreMenuBackdrop);
+    window.addEventListener('scroll', updateStoreMenuBackdrop, { passive: true });
+
     document.addEventListener('click', (event) => {
         if (!storeMenu.contains(event.target)) {
             closeStoreSubmenus();
+
+            if (storeMenu.classList.contains('open') && !storeMenuButton.contains(event.target)) {
+                closeStoreMenu();
+            }
         }
     });
 

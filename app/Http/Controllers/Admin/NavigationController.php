@@ -46,8 +46,8 @@ class NavigationController extends Controller
         $data = $request->validate([
             'label' => ['required', 'string', 'max:80'],
             'url' => ['required', 'string', 'max:2048', function ($attribute, $value, $fail) {
-                if (! Str::startsWith($value, ['/', 'https://']) || Str::startsWith($value, '//')) {
-                    $fail('Use a relative site path or a secure HTTPS link.');
+                if (! Str::startsWith($value, ['/', 'https://', '#']) || Str::startsWith($value, '//')) {
+                    $fail('Use a relative site path, a secure HTTPS link, or a hash anchor.');
                 }
             }],
             'location' => ['required', 'in:header,footer,account'],

@@ -133,6 +133,25 @@ class NavigationMenuTest extends TestCase
             ->assertDontSee('Disabled child');
     }
 
+    public function test_super_admin_can_use_hash_anchors_for_menu_destinations(): void
+    {
+        $superAdmin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();
+        $this->actingAs($superAdmin);
+
+        foreach (['#', '#specials'] as $index => $url) {
+            $label = 'Anchor menu '.$index;
+
+            $this->post(route('admin.menus.store'), [
+                'label' => $label,
+                'url' => $url,
+                'location' => 'header',
+                'is_active' => '1',
+            ])->assertRedirect()->assertSessionHasNoErrors();
+
+            $this->assertDatabaseHas('navigation_items', ['label' => $label, 'url' => $url]);
+        }
+    }
+
     public function test_account_navigation_uses_only_enabled_admin_managed_items(): void
     {
         $user = User::factory()->create();
