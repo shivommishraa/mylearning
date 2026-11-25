@@ -6,16 +6,17 @@
         @forelse($banners as $banner)
             <article class="hero-slide {{ $loop->first ? 'is-active' : '' }}" data-banner-slide aria-hidden="{{ $loop->first ? 'false' : 'true' }}" @if($banners->count() > 1) role="group" aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ $banners->count() }}" @endif>
                 <div class="hero-media" style="background-image:url('{{ $banner->image_url ?? asset('images/hero-daily-needs.svg') }}')"></div>
-                <div class="hero-copy">
-                    <span class="eyebrow">{{ $banner->eyebrow ?: 'YOUR NEIGHBOURHOOD DAILY-NEEDS STORE' }}</span>
-                    <h1>{{ $banner->title }}</h1>
-                    <p>{{ $banner->subtitle ?: ($site['hero_subtitle'] ?: 'Atta, chawal, dal, chai and household essentials from trusted Indian brands.') }}</p>
-                    <div class="hero-actions">
-                        <a class="button" href="{{ $banner->button_url ?: route('shop.index') }}">{{ $banner->button_text ?: 'Shop daily essentials' }} <span>→</span></a>
-                        <a class="hero-secondary-link" href="#shop-categories">Explore categories <span aria-hidden="true">↓</span></a>
+                @if(filled($banner->button_url))
+                    <a class="hero-click-target" href="{{ $banner->button_url }}" target="{{ $banner->link_target ?: '_self' }}" @if($banner->link_target === '_blank') rel="noopener" @endif aria-label="{{ $banner->title ?: $banner->button_text ?: 'Open banner link' }}"></a>
+                @endif
+                @if(filled($banner->eyebrow) || filled($banner->title) || filled($banner->subtitle) || (filled($banner->button_text) && filled($banner->button_url)))
+                    <div class="hero-copy">
+                        @if(filled($banner->eyebrow))<span class="eyebrow">{{ $banner->eyebrow }}</span>@endif
+                        @if(filled($banner->title))<h1>{{ $banner->title }}</h1>@endif
+                        @if(filled($banner->subtitle))<p>{{ $banner->subtitle }}</p>@endif
+                        @if(filled($banner->button_text) && filled($banner->button_url))<span class="button">{{ $banner->button_text }} <span aria-hidden="true">→</span></span>@endif
                     </div>
-                    <div class="hero-local-note"><span aria-hidden="true">⌖</span> Proudly serving Greater Noida, Uttar Pradesh</div>
-                </div>
+                @endif
             </article>
         @empty
             <div class="hero-media" style="background-image:url('{{ asset('images/hero-daily-needs.svg') }}')"></div>

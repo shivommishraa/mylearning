@@ -129,6 +129,44 @@ class ExampleTest extends TestCase
             ->assertDontSee('Global fallback introduction');
     }
 
+    public function test_banner_image_is_required_but_content_is_optional_and_banner_link_supports_new_tab(): void
+    {
+        Storage::fake('public');
+        Banner::query()->delete();
+
+        $admin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();
+
+        $this->actingAs($admin)
+            ->from(route('admin.banners.index'))
+            ->post(route('admin.banners.store'), [
+                'is_active' => 1,
+                'button_url' => '/shop',
+                'link_target' => '_blank',
+            ])
+            ->assertRedirect(route('admin.banners.index'))
+            ->assertSessionHasErrors(['image_file', 'image_url']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.banners.store'), [
+                'image_file' => UploadedFile::fake()->image('image-only-banner.png'),
+                'is_active' => 1,
+                'button_url' => '/shop',
+                'link_target' => '_blank',
+            ])
+            ->assertRedirect(route('admin.banners.index'))
+            ->assertSessionHasNoErrors();
+
+        $banner = Banner::firstOrFail();
+        $this->assertSame('', $banner->title);
+        $this->assertSame('_blank', $banner->link_target);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee($banner->image_url, false)
+            ->assertSee('target="_blank" rel="noopener"', false)
+            ->assertDontSee('hero-copy', false);
+    }
+
     public function test_public_storage_images_are_served_without_a_storage_symlink(): void
     {
         Storage::fake('public');

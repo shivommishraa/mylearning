@@ -30,7 +30,6 @@ class ContentController extends Controller
             $data['image_url'] ?? null,
             null,
             'banners',
-            $request->boolean('remove_image'),
         );
         unset($data['image_file'], $data['image_url']);
         Banner::create($data);
@@ -40,14 +39,13 @@ class ContentController extends Controller
 
     public function updateBanner(Request $request, Banner $banner): RedirectResponse
     {
-        $data = $this->bannerData($request);
+        $data = $this->bannerData($request, $banner);
         $previousImage = $banner->image;
         $data['image'] = $this->images->save(
             $data['image_file'] ?? null,
             $data['image_url'] ?? null,
             $previousImage,
             'banners',
-            $request->boolean('remove_image'),
         );
         unset($data['image_file'], $data['image_url']);
         $banner->update($data);
@@ -90,14 +88,14 @@ class ContentController extends Controller
         return back()->with('success', 'Testimonial deleted.');
     }
 
-    private function bannerData(Request $request): array
+    private function bannerData(Request $request, ?Banner $banner = null): array
     {
         $data = $request->validate([
             'eyebrow' => ['nullable', 'string', 'max:120'],
-            'title' => ['required', 'string', 'max:180'],
+            'title' => ['nullable', 'string', 'max:180'],
             'subtitle' => ['nullable', 'string', 'max:500'],
-            'image_url' => ['nullable', 'url', 'max:2048'],
-            'image_file' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
+            'image_url' => [$banner ? 'nullable' : 'required_without:image_file', 'url', 'max:2048'],
+            'image_file' => [$banner ? 'nullable' : 'required_without:image_url', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
             'button_text' => ['nullable', 'string', 'max:50'],
             'button_url' => ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) {
                 if ($value !== null && ! Str::startsWith($value, ['/', 'https://', 'http://'])) {
@@ -108,14 +106,17 @@ class ContentController extends Controller
                     $fail('The button destination must not be a protocol-relative URL.');
                 }
             }],
+            'link_target' => ['nullable', 'in:_self,_blank'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
         if (StoreCatalogRules::isRestricted(($data['eyebrow'] ?? '').' '.($data['title'] ?? '').' '.($data['subtitle'] ?? ''))) {
             throw ValidationException::withMessages(['title' => StoreCatalogRules::forbiddenMessage()]);
         }
+        $data['title'] = $data['title'] ?? '';
         $data['is_active'] = $request->boolean('is_active');
         $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['link_target'] = $data['link_target'] ?? '_self';
 
         return $data;
     }

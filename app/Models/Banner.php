@@ -10,7 +10,7 @@ class Banner extends Model
     use HasStoreImage;
 
     protected $fillable = [
-        'eyebrow', 'title', 'subtitle', 'image', 'button_text', 'button_url', 'sort_order', 'is_active',
+        'eyebrow', 'title', 'subtitle', 'image', 'button_text', 'button_url', 'link_target', 'sort_order', 'is_active',
     ];
 
     protected function casts(): array
