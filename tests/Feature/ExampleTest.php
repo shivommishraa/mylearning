@@ -431,6 +431,27 @@ class ExampleTest extends TestCase
         $this->actingAs($admin)->get(route('admin.admins.index'))->assertForbidden();
     }
 
+    public function test_admin_can_search_products_by_name_or_sku(): void
+    {
+        $admin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();
+        $product = Product::where('name', 'Shakti Bhog Chakki Atta')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('admin.products.index', ['q' => 'Shakti Bhog']))
+            ->assertOk()
+            ->assertSee($product->name)
+            ->assertDontSee('Aashirvaad Shudh Chakki Atta')
+            ->assertSee('value="Shakti Bhog"', false);
+
+        $this->get(route('admin.products.index', ['q' => $product->sku]))
+            ->assertOk()
+            ->assertSee($product->name);
+
+        $this->get(route('admin.products.index', ['q' => 'does-not-exist']))
+            ->assertOk()
+            ->assertSee('No products match your search.');
+    }
+
     public function test_super_admin_can_upload_and_replace_a_coupon_image(): void
     {
         Storage::fake('public');

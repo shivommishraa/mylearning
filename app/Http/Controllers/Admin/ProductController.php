@@ -20,10 +20,21 @@ class ProductController extends Controller
 {
     public function __construct(private readonly StoreImageManager $images) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $validated = $request->validate(['q' => ['nullable', 'string', 'max:120']]);
+        $search = trim($validated['q'] ?? '');
+
         return view('admin.products.index', [
-            'products' => Product::with('category')->latest()->paginate(15),
+            'products' => Product::with('category')
+                ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('sku', 'like', '%'.$search.'%');
+                }))
+                ->latest()
+                ->paginate(15)
+                ->withQueryString(),
+            'search' => $search,
         ]);
     }
 
