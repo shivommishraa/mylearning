@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\User;
 use App\Support\CustomerAddressManager;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,23 +16,8 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(CustomerAddressManager $addresses): array
     {
-        $phoneRules = ['nullable', 'required_without:email', 'string', 'max:20'];
-        if ($this->filled('phone') && $this->input('phone') !== $this->user()->phone) {
-            $phoneRules[] = Rule::unique('users', 'phone')->ignore($this->user()->id);
-        }
-
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'nullable',
-                'required_without:phone',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
-            ],
-            'phone' => $phoneRules,
             'additional_details' => ['nullable', 'boolean'],
         ];
 

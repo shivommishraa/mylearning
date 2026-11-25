@@ -45,7 +45,10 @@ class ProfileTest extends TestCase
 
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'email' => 'original@example.com',
+            'email_verified_at' => now(),
+        ]);
 
         $response = $this
             ->actingAs($user)
@@ -61,8 +64,35 @@ class ProfileTest extends TestCase
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('original@example.com', $user->email);
+        $this->assertNotNull($user->email_verified_at);
+    }
+
+    public function test_customers_cannot_change_registered_email_or_phone_from_profile(): void
+    {
+        $customer = User::factory()->create([
+            'email' => 'customer@example.com',
+            'phone' => '1111111111',
+        ]);
+        $otherCustomer = User::factory()->create([
+            'email' => 'other@example.com',
+            'phone' => '2222222222',
+        ]);
+
+        $response = $this->actingAs($customer)->patch('/profile', [
+            'name' => 'Updated Customer',
+            'email' => $otherCustomer->email,
+            'phone' => $otherCustomer->phone,
+        ]);
+
+        $response->assertSessionHasNoErrors()->assertRedirect('/profile');
+        $customer->refresh();
+        $this->assertSame('Updated Customer', $customer->name);
+        $this->assertSame('customer@example.com', $customer->email);
+        $this->assertSame('1111111111', $customer->phone);
+        $this->get('/profile')->assertOk()
+            ->assertSee('Registered email and mobile number cannot be changed here.')
+            ->assertSee('readonly', false);
     }
 
     public function test_user_can_update_profile_photo_and_primary_address(): void

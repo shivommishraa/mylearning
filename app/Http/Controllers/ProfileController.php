@@ -48,8 +48,6 @@ class ProfileController extends Controller
 
         $profileData = [
             'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'] ?? null,
         ];
         if ($hasAdditionalDetails) {
             $profileData += [
@@ -60,10 +58,6 @@ class ProfileController extends Controller
             ];
         }
         $user->fill($profileData);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
 
         $user->save();
         if ($hasAdditionalDetails) {

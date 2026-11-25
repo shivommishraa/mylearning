@@ -62,7 +62,7 @@
                         @if(session('status') === 'verification-link-sent')<p>A new verification link has been sent.</p>@endif
                     </div>
                 @endif
-                <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" data-contact-pair data-validated-form>
+                <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" data-validated-form>
                     @csrf
                     @method('PATCH')
                     <div class="customer-profile-fields">
@@ -72,16 +72,15 @@
                             @error('name')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
                         <div class="customer-profile-field">
-                            <label for="profile-email">Email address <span class="optional-note">Use email or mobile</span></label>
-                            <input id="profile-email" type="email" name="email" value="{{ old('email', $user->email) }}" autocomplete="email" data-contact-email>
-                            @error('email')<p class="field-error">{{ $message }}</p>@enderror
+                            <label for="profile-email">Registered email</label>
+                            <input id="profile-email" type="email" name="email" value="{{ $user->email }}" autocomplete="email" readonly aria-readonly="true">
                         </div>
                         <div class="customer-profile-field">
-                            <label for="profile-phone">Mobile number <span class="optional-note">Use email or mobile</span></label>
-                            <input id="profile-phone" type="tel" name="phone" value="{{ old('phone', $user->phone) }}" autocomplete="tel" data-contact-phone>
-                            @error('phone')<p class="field-error">{{ $message }}</p>@enderror
+                            <label for="profile-phone">Registered mobile number</label>
+                            <input id="profile-phone" type="tel" name="phone" value="{{ $user->phone }}" autocomplete="tel" readonly aria-readonly="true">
                         </div>
                     </div>
+                    <p class="customer-profile-contact-note">Registered email and mobile number cannot be changed here. Contact customer support if you need help.</p>
 
                     <div data-additional-details>
                         <div class="additional-details-toggle customer-profile-additional-toggle">
