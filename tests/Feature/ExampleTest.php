@@ -284,6 +284,11 @@ class ExampleTest extends TestCase
         $customer = User::factory()->create(['email_verified_at' => now()]);
         $product = Product::where('is_active', true)->firstOrFail();
 
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee('wishlist-login-link')
+            ->assertSee(route('login'), false);
+
         $this->actingAs($customer)
             ->postJson(route('wishlist.toggle', $product))
             ->assertOk()
@@ -298,6 +303,10 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertSee('product-wish is-saved')
             ->assertSee('aria-pressed="true"', false);
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee('detail-wishlist-button is-saved')
+            ->assertSee('Saved to wishlist');
 
         $this->actingAs($customer)
             ->postJson(route('wishlist.toggle', $product))

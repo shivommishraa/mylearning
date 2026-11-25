@@ -268,8 +268,9 @@ document.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const button = form.querySelector('button');
-    const card = form.closest('.product-card');
-    const feedback = card.querySelector('[data-product-feedback]');
+    const productContainer = form.closest('.product-card, .product-detail');
+    const feedback = form.querySelector('[data-product-feedback]')
+        || productContainer?.querySelector('[data-product-feedback]');
     button.disabled = true;
     button.setAttribute('aria-busy', 'true');
 
@@ -299,13 +300,20 @@ document.addEventListener('submit', async (event) => {
             }
         } else {
             const isWishlisted = result.is_wishlisted;
+            const productName = form.dataset.productName
+                || productContainer?.querySelector('.product-title, h1')?.textContent.trim()
+                || 'product';
             button.classList.toggle('is-saved', isWishlisted);
             button.setAttribute('aria-pressed', String(isWishlisted));
             button.setAttribute('title', isWishlisted ? 'Remove from wishlist' : 'Save to wishlist');
             button.setAttribute(
                 'aria-label',
-                `${isWishlisted ? 'Remove' : 'Add'} ${button.closest('.product-card').querySelector('.product-title').textContent} ${isWishlisted ? 'from' : 'to'} wishlist`,
+                `${isWishlisted ? 'Remove' : 'Add'} ${productName} ${isWishlisted ? 'from' : 'to'} wishlist`,
             );
+            const detailLabel = button.querySelector('span + span');
+            if (detailLabel) {
+                detailLabel.textContent = isWishlisted ? 'Saved to wishlist' : 'Add to wishlist';
+            }
         }
     } catch (error) {
         feedback.textContent = error.message || 'Unable to complete this action. Please try again.';
@@ -320,10 +328,18 @@ const storeMenuButton = document.querySelector('[data-menu-toggle]');
 const storeMenu = document.querySelector('[data-menu]');
 
 if (storeMenuButton && storeMenu) {
+    const closeStoreSubmenus = () => {
+        storeMenu.querySelectorAll('[data-nav-group].is-open').forEach((group) => {
+            group.classList.remove('is-open');
+            group.querySelector('[data-nav-submenu-toggle]')?.setAttribute('aria-expanded', 'false');
+        });
+    };
+
     const closeStoreMenu = () => {
         storeMenu.classList.remove('open');
         storeMenuButton.setAttribute('aria-expanded', 'false');
         storeMenuButton.setAttribute('aria-label', 'Open navigation');
+        closeStoreSubmenus();
     };
 
     storeMenuButton.addEventListener('click', () => {
@@ -334,6 +350,25 @@ if (storeMenuButton && storeMenu) {
 
     storeMenu.querySelectorAll('a').forEach((link) => {
         link.addEventListener('click', closeStoreMenu);
+    });
+
+    storeMenu.querySelectorAll('[data-nav-submenu-toggle]').forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+            const group = toggle.closest('[data-nav-group]');
+            const shouldOpen = !group.classList.contains('is-open');
+            closeStoreSubmenus();
+
+            if (shouldOpen) {
+                group.classList.add('is-open');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!storeMenu.contains(event.target)) {
+            closeStoreSubmenus();
+        }
     });
 
     document.addEventListener('keydown', (event) => {

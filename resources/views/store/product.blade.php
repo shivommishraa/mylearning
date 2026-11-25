@@ -19,6 +19,7 @@
             @elseif(!$storefrontFeatures['enable_add_to_cart'])
                 <p class="muted" style="font-size:12px">Online ordering is currently unavailable.</p>
             @endif
+            @include('components.product-wishlist', ['product' => $product, 'placement' => 'detail'])
             <div class="info-note">A trusted everyday pick from SSG MART. Need a hand? <a class="text-link" href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}">Give us a call.</a></div>
         </div>
     </div>

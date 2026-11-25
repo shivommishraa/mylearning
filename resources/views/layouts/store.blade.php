@@ -64,7 +64,19 @@
             </div>
         </div>
         <nav class="wrap nav" data-menu>
-            @foreach(($navigationItems['header'] ?? collect()) as $item)<a href="{{ $item->url }}">{{ $item->label }}</a>@endforeach
+            @foreach(($navigationItems['header'] ?? collect()) as $item)
+                @if($item->children->isEmpty())
+                    <a href="{{ $item->url }}">{{ $item->label }}</a>
+                @else
+                    <div class="nav-group" data-nav-group>
+                        <a href="{{ $item->url }}">{{ $item->label }}</a>
+                        <button class="nav-submenu-toggle" type="button" data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true" aria-controls="nav-submenu-{{ $item->id }}" aria-label="Toggle {{ $item->label }} submenu"><span aria-hidden="true">⌄</span></button>
+                        <div class="nav-submenu" id="nav-submenu-{{ $item->id }}" data-nav-submenu>
+                            @foreach($item->children as $child)<a href="{{ $child->url }}">{{ $child->label }}</a>@endforeach
+                        </div>
+                    </div>
+                @endif
+            @endforeach
             @foreach($storeCategories->take(5) as $category)<a href="{{ route('shop.index', ['category' => $category->slug]) }}">{{ $category->name }}</a>@endforeach
         </nav>
     </header>
@@ -82,7 +94,7 @@
         <div class="wrap footer-grid">
             <div><a class="brand" href="{{ route('home') }}"><span class="brand-mark">{{ strtoupper(substr($site['business_name'], 0, 1)) }}</span><span>{{ $site['business_name'] }}</span></a><p>Your neighbourhood store for pantry staples, household care and everyday essentials.</p><a href="https://wa.me/{{ preg_replace('/\D+/', '', $site['whatsapp']) }}" target="_blank" rel="noopener">Chat with us on WhatsApp ↗</a></div>
             <div><h3>Come on in</h3><address>{{ $site['address'] }}</address><a href="https://maps.google.com/?q={{ urlencode($site['address']) }}" target="_blank" rel="noopener">Find us on Google Maps ↗</a></div>
-            <div><h3>A few helpful links</h3><div class="footer-links"><a href="{{ auth()->check() ? route('account') : route('login') }}">Your account</a><a href="{{ route('cart.index') }}">Your basket</a>@foreach(($navigationItems['footer'] ?? collect()) as $item)<a href="{{ $item->url }}">{{ $item->label }}</a>@endforeach @foreach($publishedPages as $page)<a href="{{ route('pages.show',$page->slug) }}">{{ $page->title }}</a>@endforeach</div></div>
+            <div><h3>A few helpful links</h3><div class="footer-links"><a href="{{ auth()->check() ? route('account') : route('login') }}">Your account</a><a href="{{ route('cart.index') }}">Your basket</a>@foreach(($navigationItems['footer'] ?? collect()) as $item)<a href="{{ $item->url }}">{{ $item->label }}</a>@if($item->children->isNotEmpty())<div class="footer-submenu">@foreach($item->children as $child)<a href="{{ $child->url }}">{{ $child->label }}</a>@endforeach</div>@endif @endforeach @foreach($publishedPages as $page)<a href="{{ route('pages.show',$page->slug) }}">{{ $page->title }}</a>@endforeach</div></div>
             <div><h3>We're easy to reach</h3><div class="footer-links"><a href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}">Call {{ $site['phone'] }}</a><a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a><span>Greater Noida, Uttar Pradesh</span></div></div>
         </div>
         <div class="wrap footer-bottom"><span>© {{ now()->year }} {{ $site['business_name'] }}. {{ $site['footer_tagline'] }}</span><span>@if(filled($site['footer_note_url'] ?? null))<a href="{{ $site['footer_note_url'] }}">{{ $site['footer_note'] }}</a>@else{{ $site['footer_note'] }}@endif</span></div>

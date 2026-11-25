@@ -7,10 +7,7 @@
             @endif
         </a>
         @if ($storefrontFeatures['show_product_prices'] && $product->compare_at_price && $product->compare_at_price > $product->price)<span class="product-badge">{{ (int) round((1 - $product->price / $product->compare_at_price) * 100) }}% off</span>@endif
-        @auth
-            @php($isWishlisted = auth()->user()->wishlist->contains('id', $product->id))
-            <form method="POST" action="{{ route('wishlist.toggle', $product) }}" data-product-action="wishlist">@csrf<button class="product-wish{{ $isWishlisted ? ' is-saved' : '' }}" title="{{ $isWishlisted ? 'Remove from wishlist' : 'Save to wishlist' }}" aria-label="{{ $isWishlisted ? 'Remove ' : 'Add ' }}{{ $product->name }} {{ $isWishlisted ? 'from' : 'to' }} wishlist" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}">♡</button></form>
-        @endauth
+        @include('components.product-wishlist', ['product' => $product])
     </div>
     <div class="product-info">
         <span class="product-category">{{ $product->brand?->name ?: $product->category?->name }}</span>

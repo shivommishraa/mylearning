@@ -25,7 +25,7 @@ class WelcomePopupController extends Controller
         $popup = WelcomePopup::with(['images', 'buttons'])->find(1)
             ?? new WelcomePopup([
                 'display_mode' => 'image_content_buttons',
-                'display_frequency' => 'once_per_session',
+                'display_frequency' => 'every_visit',
                 'image_position' => 'left',
                 'content_alignment' => 'left',
                 'button_style' => 'solid',
@@ -45,7 +45,7 @@ class WelcomePopupController extends Controller
         $buttons = $data['buttons'];
         unset($data['image_files'], $data['buttons'], $data['remove_images']);
 
-        $popup = new WelcomePopup($data);
+        $popup = new WelcomePopup($data + ['display_frequency' => 'every_visit']);
         $popup->id = 1;
         $storedPaths = [];
 

@@ -20,10 +20,16 @@ class WelcomePopupTest extends TestCase
         $this->seed();
     }
 
-    public function test_super_admin_can_create_and_enable_a_multi_image_welcome_popup(): void
+    public function test_default_welcome_popup_shows_every_visit_and_super_admin_can_manage_it(): void
     {
         Storage::fake('public');
         $superAdmin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('data-welcome-popup', false)
+            ->assertSee('data-display-frequency="every_visit"', false)
+            ->assertSee('Welcome to SSG MART');
 
         $this->actingAs($superAdmin)->get(route('admin.welcome-popup.index'))
             ->assertOk()
@@ -31,7 +37,7 @@ class WelcomePopupTest extends TestCase
             ->assertSee('Only content + buttons')
             ->assertSee('Add a button');
 
-        $this->actingAs($superAdmin)->post(route('admin.welcome-popup.store'), [
+        $this->actingAs($superAdmin)->put(route('admin.welcome-popup.update'), [
             'display_mode' => 'image_content_buttons',
             'title' => 'Welcome to SSG MART',
             'description' => 'Shop neighbourhood favourites.',
@@ -56,12 +62,11 @@ class WelcomePopupTest extends TestCase
             ->assertSee('Only once on this browser (until site data is cleared)');
 
         $popup = WelcomePopup::with(['images', 'buttons'])->findOrFail(1);
-        $this->assertFalse($popup->is_enabled);
+        $this->assertTrue($popup->is_enabled);
         $this->assertCount(2, $popup->images);
         $this->assertCount(2, $popup->buttons);
         Storage::disk('public')->assertExists($popup->images[0]->path);
         $this->get('/media/'.$popup->images[0]->path)->assertOk();
-        $this->get('/')->assertDontSee('data-welcome-popup', false);
 
         $removedImagePath = $popup->images[0]->path;
         $this->put(route('admin.welcome-popup.update'), [
@@ -94,13 +99,20 @@ class WelcomePopupTest extends TestCase
         ])->assertRedirect(route('admin.welcome-popup.index'))
             ->assertSessionHasNoErrors();
 
+        $this->put(route('admin.welcome-popup.display'), [
+            'is_enabled' => '1',
+            'display_frequency' => 'every_visit',
+            'display_delay' => '0',
+        ])->assertRedirect(route('admin.welcome-popup.index'))
+            ->assertSessionHasNoErrors();
+
         $this->get('/')
             ->assertOk()
             ->assertSee('data-page-loader', false)
             ->assertSee('data-back-to-top', false)
             ->assertSee('aria-label="Scroll to top"', false)
             ->assertSee('data-welcome-popup', false)
-            ->assertSee('data-display-frequency="once_per_visitor"', false)
+            ->assertSee('data-display-frequency="every_visit"', false)
             ->assertSee('Welcome to SSG MART, neighbour!')
             ->assertSee('Shop neighbourhood favourites.')
             ->assertSee('Shop now')
@@ -124,7 +136,7 @@ class WelcomePopupTest extends TestCase
         $superAdmin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();
         $this->actingAs($superAdmin);
 
-        $this->post(route('admin.welcome-popup.store'), [
+        $this->put(route('admin.welcome-popup.update'), [
             'display_mode' => 'image_only',
             'image_position' => 'left',
             'content_alignment' => 'left',

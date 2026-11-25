@@ -53,7 +53,13 @@ class AppServiceProvider extends ServiceProvider
                     ->reject(fn (Category $category) => StoreCatalogRules::isRestricted($category->name.' '.$category->slug))
                 : collect()));
             $view->with('navigationItems', Cache::remember('ssg.navigation-items', 300, fn () => Schema::hasTable('navigation_items')
-                ? NavigationItem::where('is_active', true)->orderBy('location')->orderBy('sort_order')->get()->groupBy('location')
+                ? NavigationItem::whereNull('parent_id')
+                    ->where('is_active', true)
+                    ->with(['children' => fn ($query) => $query->where('is_active', true)])
+                    ->orderBy('location')
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->groupBy('location')
                 : collect()));
         });
     }
