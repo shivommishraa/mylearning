@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
+use App\Support\StoreImageManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,6 +12,8 @@ use Illuminate\View\View;
 
 class CouponController extends Controller
 {
+    public function __construct(private readonly StoreImageManager $images) {}
+
     public function index(): View
     {
         return view('admin.coupons.index', ['coupons' => Coupon::latest()->paginate(15)]);
@@ -18,14 +21,33 @@ class CouponController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Coupon::create($this->validated($request));
+        $data = $this->validated($request);
+        $data['image'] = $this->images->save(
+            $data['image_file'] ?? null,
+            $data['image_url'] ?? null,
+            null,
+            'coupons',
+        );
+        unset($data['image_file'], $data['image_url']);
+        Coupon::create($data);
 
         return back()->with('success', 'Coupon created.');
     }
 
     public function update(Request $request, Coupon $coupon): RedirectResponse
     {
-        $coupon->update($this->validated($request, $coupon));
+        $data = $this->validated($request, $coupon);
+        $previousImage = $coupon->image;
+        $data['image'] = $this->images->save(
+            $data['image_file'] ?? null,
+            $data['image_url'] ?? null,
+            $previousImage,
+            'coupons',
+            $request->boolean('remove_image'),
+        );
+        unset($data['image_file'], $data['image_url']);
+        $coupon->update($data);
+        $this->images->deleteReplaced($previousImage, $coupon->image);
 
         return back()->with('success', 'Coupon updated.');
     }
@@ -50,6 +72,8 @@ class CouponController extends Controller
             'starts_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date', 'after:starts_at'],
             'is_active' => ['nullable', 'boolean'],
+            'image_url' => ['nullable', 'url', 'max:2048'],
+            'image_file' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
         ]);
         $data['code'] = Str::upper($data['code']);
         $data['is_active'] = $request->boolean('is_active');

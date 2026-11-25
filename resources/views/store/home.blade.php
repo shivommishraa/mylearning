@@ -64,7 +64,7 @@
     @if($promotion)
         <section class="wrap wide-promo">
             <div class="wide-promo-copy"><span class="eyebrow">{{ $promotion->code }} · STORE OFFER</span><h2>{{ $promotion->type === 'percent' ? number_format((float) $promotion->value, 0).'%' : '₹'.number_format((float) $promotion->value, 0) }} off your basket.</h2><p>{{ $promotion->description ?: 'Use code '.$promotion->code.' at checkout on eligible orders.' }}</p><a href="{{ route('shop.index') }}" class="button">Shop the offer →</a></div>
-            <div class="promo-art" aria-hidden="true"><img src="{{ asset('images/hero-daily-needs.svg') }}" alt="" loading="lazy"></div>
+            <div class="promo-art" aria-hidden="true"><img src="{{ $promotion->image_url ?: asset('images/hero-daily-needs.svg') }}" alt="" loading="lazy"></div>
         </section>
     @endif
 

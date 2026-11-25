@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\SiteSetting;
@@ -428,6 +429,56 @@ class ExampleTest extends TestCase
         $this->actingAs($admin)->get(route('admin.products.settings'))->assertOk();
         $this->actingAs($admin)->get(route('admin.orders.index'))->assertForbidden();
         $this->actingAs($admin)->get(route('admin.admins.index'))->assertForbidden();
+    }
+
+    public function test_super_admin_can_upload_and_replace_a_coupon_image(): void
+    {
+        Storage::fake('public');
+        $superAdmin = User::where('email', env('SSG_SUPER_ADMIN_EMAIL', 'admin@ssgmart.local'))->firstOrFail();
+
+        $this->actingAs($superAdmin)
+            ->from(route('admin.coupons.index'))
+            ->post(route('admin.coupons.store'), [
+                'code' => 'IMAGEOFFER',
+                'description' => 'Offer with artwork',
+                'type' => 'percent',
+                'value' => 10,
+                'image_file' => UploadedFile::fake()->image('offer.png'),
+                'image_url' => '',
+                'is_active' => 1,
+            ])
+            ->assertRedirect(route('admin.coupons.index'))
+            ->assertSessionHasNoErrors();
+
+        $coupon = Coupon::where('code', 'IMAGEOFFER')->firstOrFail();
+        $originalImage = $coupon->image;
+        Storage::disk('public')->assertExists($originalImage);
+
+        $this->get(route('admin.coupons.index'))
+            ->assertOk()
+            ->assertSee($coupon->image_url, false);
+        $this->get('/')
+            ->assertOk()
+            ->assertSee($coupon->image_url, false);
+
+        $this->from(route('admin.coupons.index'))
+            ->put(route('admin.coupons.update', $coupon), [
+                'code' => 'IMAGEOFFER',
+                'description' => 'Offer with updated artwork',
+                'type' => 'percent',
+                'value' => 10,
+                'image_file' => UploadedFile::fake()->image('offer-updated.png'),
+                'image_url' => '',
+                'is_active' => 1,
+            ])
+            ->assertRedirect(route('admin.coupons.index'))
+            ->assertSessionHasNoErrors();
+
+        $coupon->refresh();
+        $this->assertNotSame($originalImage, $coupon->image);
+        Storage::disk('public')->assertMissing($originalImage);
+        Storage::disk('public')->assertExists($coupon->image);
+        $this->get('/media/'.$coupon->image)->assertOk();
     }
 
     public function test_super_admin_workspaces_render_and_website_settings_are_live(): void

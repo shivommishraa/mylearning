@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasStoreImage;
 use Illuminate\Database\Eloquent\Model;
 
 class Coupon extends Model
 {
+    use HasStoreImage;
+
     protected $fillable = [
-        'code', 'description', 'type', 'value', 'minimum_order',
+        'code', 'description', 'image', 'type', 'value', 'minimum_order',
         'maximum_discount', 'usage_limit', 'usage_count', 'starts_at', 'expires_at', 'is_active',
     ];
 
