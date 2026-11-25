@@ -125,6 +125,7 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertSee('Banner-specific headline')
             ->assertSee('Banner-specific introduction')
+            ->assertSee('hero-slide--content', false)
             ->assertDontSee('Global fallback headline')
             ->assertDontSee('Global fallback introduction');
     }
@@ -164,6 +165,7 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertSee($banner->image_url, false)
             ->assertSee('target="_blank" rel="noopener"', false)
+            ->assertSee('hero-slide--image-only', false)
             ->assertDontSee('hero-copy', false);
     }
 

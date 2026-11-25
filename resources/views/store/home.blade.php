@@ -2,14 +2,15 @@
 
 @section('content')
 <div class="store-home">
-    <section class="wrap hero {{ $banners->count() > 1 ? 'hero-slider' : '' }}" @if($banners->count() > 1) data-banner-slider aria-label="Homepage banners" @endif>
+    @php($imageOnlyBanners = $banners->isNotEmpty() && $banners->every(fn ($banner) => ! $banner->hasOverlayContent()))
+    <section class="wrap hero {{ $banners->count() > 1 ? 'hero-slider' : '' }} {{ $imageOnlyBanners ? 'hero-image-only' : '' }}" @if($banners->count() > 1) data-banner-slider aria-label="Homepage banners" @endif>
         @forelse($banners as $banner)
-            <article class="hero-slide {{ $loop->first ? 'is-active' : '' }}" data-banner-slide aria-hidden="{{ $loop->first ? 'false' : 'true' }}" @if($banners->count() > 1) role="group" aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ $banners->count() }}" @endif>
+            <article class="hero-slide {{ $banner->hasOverlayContent() ? 'hero-slide--content' : 'hero-slide--image-only' }} {{ $loop->first ? 'is-active' : '' }}" data-banner-slide aria-hidden="{{ $loop->first ? 'false' : 'true' }}" @if($banners->count() > 1) role="group" aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ $banners->count() }}" @endif>
                 <div class="hero-media" style="background-image:url('{{ $banner->image_url ?? asset('images/hero-daily-needs.svg') }}')"></div>
                 @if(filled($banner->button_url))
                     <a class="hero-click-target" href="{{ $banner->button_url }}" target="{{ $banner->link_target ?: '_self' }}" @if($banner->link_target === '_blank') rel="noopener" @endif aria-label="{{ $banner->title ?: $banner->button_text ?: 'Open banner link' }}"></a>
                 @endif
-                @if(filled($banner->eyebrow) || filled($banner->title) || filled($banner->subtitle) || (filled($banner->button_text) && filled($banner->button_url)))
+                @if($banner->hasOverlayContent())
                     <div class="hero-copy">
                         @if(filled($banner->eyebrow))<span class="eyebrow">{{ $banner->eyebrow }}</span>@endif
                         @if(filled($banner->title))<h1>{{ $banner->title }}</h1>@endif

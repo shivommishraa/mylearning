@@ -17,4 +17,12 @@ class Banner extends Model
     {
         return ['is_active' => 'boolean'];
     }
+
+    public function hasOverlayContent(): bool
+    {
+        return filled($this->eyebrow)
+            || filled($this->title)
+            || filled($this->subtitle)
+            || (filled($this->button_text) && filled($this->button_url));
+    }
 }
