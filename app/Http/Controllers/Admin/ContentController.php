@@ -94,8 +94,8 @@ class ContentController extends Controller
             'eyebrow' => ['nullable', 'string', 'max:120'],
             'title' => ['nullable', 'string', 'max:180'],
             'subtitle' => ['nullable', 'string', 'max:500'],
-            'image_url' => [$banner ? 'nullable' : 'required_without:image_file', 'url', 'max:2048'],
-            'image_file' => [$banner ? 'nullable' : 'required_without:image_url', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
+            'image_url' => ['nullable', $banner ? 'sometimes' : 'required_without:image_file', 'url', 'max:2048'],
+            'image_file' => ['nullable', $banner ? 'sometimes' : 'required_without:image_url', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
             'button_text' => ['nullable', 'string', 'max:50'],
             'button_url' => ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) {
                 if ($value !== null && ! Str::startsWith($value, ['/', 'https://', 'http://'])) {

@@ -150,6 +150,7 @@ class ExampleTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.banners.store'), [
                 'image_file' => UploadedFile::fake()->image('image-only-banner.png'),
+                'image_url' => '',
                 'is_active' => 1,
                 'button_url' => '/shop',
                 'link_target' => '_blank',
