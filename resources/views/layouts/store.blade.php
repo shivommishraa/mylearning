@@ -73,7 +73,7 @@
                     @else
                         <div class="nav-group" data-nav-group>
                             <a href="{{ $item->url }}">{{ $item->label }}</a>
-                            <button class="nav-submenu-toggle" type="button" data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true" aria-controls="nav-submenu-{{ $item->id }}" aria-label="Toggle {{ $item->label }} submenu"><span aria-hidden="true">⌄</span></button>
+                            <button class="nav-submenu-toggle" type="button" data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true" aria-controls="nav-submenu-{{ $item->id }}" aria-label="Toggle {{ $item->label }} submenu"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4"/></svg></button>
                             <div class="nav-submenu" id="nav-submenu-{{ $item->id }}" data-nav-submenu>
                                 @foreach($item->children as $child)<a href="{{ $child->url }}">{{ $child->label }}</a>@endforeach
                             </div>
