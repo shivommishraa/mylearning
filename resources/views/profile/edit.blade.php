@@ -72,15 +72,23 @@
                             @error('name')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
                         <div class="customer-profile-field">
-                            <label for="profile-email">Registered email</label>
-                            <input id="profile-email" type="email" name="email" value="{{ $user->email }}" autocomplete="email" readonly aria-readonly="true">
+                            <label for="profile-email">{{ $user->email ? 'Registered email' : 'Add email' }}</label>
+                            <input id="profile-email" type="email" name="email" value="{{ $user->email ?: old('email') }}" autocomplete="email" @if($user->email) readonly aria-readonly="true" @endif>
+                            @error('email')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
                         <div class="customer-profile-field">
-                            <label for="profile-phone">Registered mobile number</label>
-                            <input id="profile-phone" type="tel" name="phone" value="{{ $user->phone }}" autocomplete="tel" readonly aria-readonly="true">
+                            <label for="profile-phone">{{ $user->phone ? 'Registered mobile number' : 'Add mobile number' }}</label>
+                            <input id="profile-phone" type="tel" name="phone" value="{{ $user->phone ?: old('phone') }}" autocomplete="tel" @if($user->phone) readonly aria-readonly="true" @endif>
+                            @error('phone')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
                     </div>
-                    <p class="customer-profile-contact-note">Registered email and mobile number cannot be changed here. Contact customer support if you need help.</p>
+                    <p class="customer-profile-contact-note">
+                        @if($user->email && $user->phone)
+                            Registered email and mobile number cannot be changed here. Contact customer support if you need help.
+                        @else
+                            You can add a missing email or mobile number here. Once saved, it cannot be changed.
+                        @endif
+                    </p>
 
                     <div data-additional-details>
                         <div class="additional-details-toggle customer-profile-additional-toggle">

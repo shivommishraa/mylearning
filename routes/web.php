@@ -113,6 +113,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin|Ad
     Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->middleware('permission:customers.delete')->name('customers.destroy');
     Route::get('/enquiries', [CustomerController::class, 'enquiries'])->middleware('permission:enquiries.view')->name('enquiries.index');
     Route::patch('/enquiries/{enquiry}/read', [CustomerController::class, 'markEnquiryRead'])->middleware('permission:enquiries.edit')->name('enquiries.read');
+    Route::delete('/enquiries/{enquiry}', [CustomerController::class, 'destroyEnquiry'])->middleware('permission:enquiries.delete')->name('enquiries.destroy');
     Route::get('/activity', [CustomerController::class, 'activity'])->middleware('permission:activity.view')->name('activity.index');
 
     Route::get('/banners', [ContentController::class, 'banners'])->middleware('permission:content.view')->name('banners.index');

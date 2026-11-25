@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\SiteSetting;
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -106,6 +109,78 @@ class ProfileTest extends TestCase
         $this->get('/profile')->assertOk()
             ->assertSee('Registered email and mobile number cannot be changed here.')
             ->assertSee('readonly', false);
+    }
+
+    public function test_user_can_add_a_missing_email_and_cannot_change_it_afterwards(): void
+    {
+        Notification::fake();
+        SiteSetting::create([
+            'key' => 'require_email_verification',
+            'value' => '1',
+            'group' => 'general',
+        ]);
+        $user = User::factory()->create([
+            'email' => null,
+            'phone' => null,
+            'email_verified_at' => null,
+        ]);
+
+        $this->actingAs($user)->get('/profile')
+            ->assertOk()
+            ->assertSee('id="profile-email" type="email" name="email" value="" autocomplete="email"', false)
+            ->assertSee('id="profile-phone" type="tel" name="phone" value="" autocomplete="tel"', false);
+
+        User::factory()->create(['email' => 'taken@example.com']);
+        $this->patch('/profile', [
+            'name' => $user->name,
+            'email' => 'taken@example.com',
+        ])->assertSessionHasErrors('email');
+
+        $this->patch('/profile', [
+            'name' => $user->name,
+            'email' => 'added@example.com',
+        ])->assertSessionHasNoErrors();
+
+        $user->refresh();
+        $this->assertSame('added@example.com', $user->email);
+        $this->assertNull($user->phone);
+        $this->assertNull($user->email_verified_at);
+        Notification::assertSentTo($user, VerifyEmail::class);
+
+        $this->patch('/profile', [
+            'name' => $user->name,
+            'email' => 'changed@example.com',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('added@example.com', $user->refresh()->email);
+    }
+
+    public function test_user_can_add_a_missing_phone_but_cannot_change_it_afterwards(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'existing@example.com',
+            'phone' => null,
+        ]);
+        User::factory()->create(['phone' => '9999999999']);
+
+        $this->actingAs($user)->patch('/profile', [
+            'name' => $user->name,
+            'phone' => '9999999999',
+        ])->assertSessionHasErrors('phone');
+
+        $this->patch('/profile', [
+            'name' => $user->name,
+            'phone' => '8888888888',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('8888888888', $user->refresh()->phone);
+
+        $this->patch('/profile', [
+            'name' => $user->name,
+            'email' => 'changed@example.com',
+            'phone' => '7777777777',
+        ])->assertSessionHasNoErrors();
+        $user->refresh();
+        $this->assertSame('existing@example.com', $user->email);
+        $this->assertSame('8888888888', $user->phone);
     }
 
     public function test_user_can_update_profile_photo_and_primary_address(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\SiteSetting;
 use App\Support\CustomerAddressManager;
 use App\Support\ProfilePhotoManager;
 use Illuminate\Http\RedirectResponse;
@@ -49,6 +50,15 @@ class ProfileController extends Controller
         $profileData = [
             'name' => $data['name'],
         ];
+        $emailAdded = blank($user->email) && filled($data['email'] ?? null);
+        $phoneAdded = blank($user->phone) && filled($data['phone'] ?? null);
+        if ($emailAdded) {
+            $profileData['email'] = $data['email'];
+        }
+        if ($phoneAdded) {
+            $profileData['phone'] = $data['phone'];
+        }
+
         if ($hasAdditionalDetails) {
             $profileData += [
                 'father_husband_name' => $data['father_husband_name'] ?? null,
@@ -58,8 +68,15 @@ class ProfileController extends Controller
             ];
         }
         $user->fill($profileData);
+        if ($emailAdded) {
+            $user->email_verified_at = null;
+        }
 
         $user->save();
+        if ($emailAdded && SiteSetting::getValue('require_email_verification', '0') === '1') {
+            $user->sendEmailVerificationNotification();
+        }
+
         if ($hasAdditionalDetails) {
             $photos->deleteReplaced($previousPhoto, $newPhoto);
             $addresses->syncProfileAddress($user, $data);

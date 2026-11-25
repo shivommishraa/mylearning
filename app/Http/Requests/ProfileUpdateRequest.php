@@ -16,10 +16,36 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(CustomerAddressManager $addresses): array
     {
+        $user = $this->user();
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'additional_details' => ['nullable', 'boolean'],
         ];
+
+        if (blank($user->email)) {
+            $rules['email'] = [
+                'nullable',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->getKey()),
+            ];
+        }
+
+        if (blank($user->phone)) {
+            $rules['phone'] = [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('users', 'phone')->ignore($user->getKey()),
+            ];
+        }
+
+        if (blank($user->email) && blank($user->phone)) {
+            array_unshift($rules['email'], 'required_without:phone');
+            array_unshift($rules['phone'], 'required_without:email');
+        }
 
         if ($this->boolean('additional_details')) {
             $rules += [

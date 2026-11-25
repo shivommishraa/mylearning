@@ -16,12 +16,14 @@
             </div>
             <p class="auth-form-hint auth-field-wide">Enter at least one contact method: email or mobile number.</p>
             <div class="auth-form-field">
-                <x-input-label for="email" :value="__('Email (optional if you use mobile)')" />
+                <x-input-label for="email" :value="__('Email')" />
+                <p class="auth-contact-note">Optional if you use mobile</p>
                 <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" autocomplete="email" data-contact-email />
                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
             </div>
             <div class="auth-form-field">
-                <x-input-label for="phone" :value="__('Mobile number (optional if you use email)')" />
+                <x-input-label for="phone" :value="__('Mobile number')" />
+                <p class="auth-contact-note">Optional if you use email</p>
                 <x-text-input id="phone" class="block mt-1 w-full" type="tel" name="phone" :value="old('phone')" autocomplete="tel" data-contact-phone />
                 <x-input-error :messages="$errors->get('phone')" class="mt-2" />
             </div>

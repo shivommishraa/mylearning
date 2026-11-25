@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\CustomerAddressManager;
 use App\Support\ProfilePhotoManager;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -177,6 +178,14 @@ class CustomerController extends Controller
         return back()->with('success', 'Enquiry marked as read.');
     }
 
+    public function destroyEnquiry(Enquiry $enquiry): RedirectResponse
+    {
+        $this->log('enquiry.deleted', $enquiry);
+        $enquiry->delete();
+
+        return back()->with('success', 'Enquiry deleted.');
+    }
+
     public function activity(): View
     {
         return view('admin.activity.index', ['logs' => ActivityLog::with('user')->latest()->paginate(25)]);
@@ -211,13 +220,13 @@ class CustomerController extends Controller
         abort_if($customer->roles()->exists(), 404);
     }
 
-    private function log(string $action, User $customer): void
+    private function log(string $action, Model $subject): void
     {
         ActivityLog::create([
             'user_id' => auth()->id(),
             'action' => $action,
-            'subject_type' => User::class,
-            'subject_id' => $customer->id,
+            'subject_type' => $subject::class,
+            'subject_id' => $subject->getKey(),
         ]);
     }
 }
