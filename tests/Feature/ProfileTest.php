@@ -26,6 +26,23 @@ class ProfileTest extends TestCase
             ->assertDontSee('data-crop-zoom', false);
     }
 
+    public function test_profile_header_photo_opens_a_view_only_lightbox(): void
+    {
+        $user = User::factory()->create(['profile_photo_path' => 'profiles/current.jpg']);
+
+        $response = $this->actingAs($user)->get('/profile');
+
+        $response->assertOk()
+            ->assertSee('data-photo-lightbox-trigger', false)
+            ->assertSee('data-photo-lightbox-close', false);
+
+        preg_match('/<div class="profile-photo-lightbox" data-photo-lightbox hidden>(.*?)<\\/div>/s', $response->getContent(), $modal);
+
+        $this->assertArrayHasKey(1, $modal);
+        $this->assertStringNotContainsString('data-photo-open', $modal[1]);
+        $this->assertStringNotContainsString('Choose photo', $modal[1]);
+    }
+
     public function test_profile_information_can_be_updated(): void
     {
         $user = User::factory()->create();

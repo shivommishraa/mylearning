@@ -1282,3 +1282,36 @@ document.addEventListener('click', (event) => {
     const editor = trigger.closest('[data-photo-editor]') || document.querySelector('[data-photo-editor]');
     editor?.dispatchEvent(new Event('open-current-photo'));
 });
+
+const photoLightbox = document.querySelector('[data-photo-lightbox]');
+const photoLightboxTrigger = document.querySelector('[data-photo-lightbox-trigger]');
+
+if (photoLightbox && photoLightboxTrigger) {
+    const closeButton = photoLightbox.querySelector('[data-photo-lightbox-close]');
+    let previousFocus = null;
+
+    const closePhotoLightbox = () => {
+        photoLightbox.hidden = true;
+        document.body.classList.remove('photo-lightbox-open');
+        previousFocus?.focus();
+    };
+
+    photoLightboxTrigger.addEventListener('click', () => {
+        previousFocus = photoLightboxTrigger;
+        photoLightbox.hidden = false;
+        document.body.classList.add('photo-lightbox-open');
+        closeButton?.focus();
+    });
+
+    closeButton?.addEventListener('click', closePhotoLightbox);
+    photoLightbox.addEventListener('click', (event) => {
+        if (event.target === photoLightbox) {
+            closePhotoLightbox();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !photoLightbox.hidden) {
+            closePhotoLightbox();
+        }
+    });
+}

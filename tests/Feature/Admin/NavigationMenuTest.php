@@ -143,9 +143,10 @@ class NavigationMenuTest extends TestCase
 
         $this->actingAs($user)->get('/account')
             ->assertOk()
-            ->assertSee('Your overview')
             ->assertSee('Personal details')
-            ->assertDontSee('href="/account/orders"', false);
+            ->assertDontSee('Your overview')
+            ->assertDontSee('href="/account/orders"', false)
+            ->assertSeeInOrder(['Personal details', 'Delivery addresses', 'Saved favourites', 'Sign out']);
     }
 
     public function test_admin_menu_actions_require_the_matching_super_admin_granted_permission(): void

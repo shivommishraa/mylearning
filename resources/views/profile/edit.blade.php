@@ -14,7 +14,7 @@
 
     <section class="customer-profile-hero">
         @if($user->profile_photo_path)
-            <button class="customer-profile-hero-avatar" type="button" data-photo-open aria-label="View and edit profile photo">
+            <button class="customer-profile-hero-avatar" type="button" data-photo-lightbox-trigger aria-label="View profile photo">
                 <img src="{{ route('profile.photo', $user) }}" alt="{{ $user->name }} profile photo">
             </button>
         @else
@@ -29,6 +29,14 @@
         </div>
         <span class="customer-profile-member">Member since {{ $user->created_at->format('M Y') }}</span>
     </section>
+    @if($user->profile_photo_path)
+        <div class="profile-photo-lightbox" data-photo-lightbox hidden>
+            <section class="profile-photo-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Profile photo">
+                <button class="profile-photo-lightbox-close" type="button" data-photo-lightbox-close aria-label="Close profile photo">&times;</button>
+                <img class="profile-photo-lightbox-image" src="{{ route('profile.photo', $user) }}" alt="{{ $user->name }} profile photo">
+            </section>
+        </div>
+    @endif
 
     <div class="account-layout customer-profile-layout">
         @include('account.partials.navigation', ['active' => 'profile'])
