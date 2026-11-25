@@ -25,6 +25,12 @@
     <div class="admin-field"><label>Homepage introduction</label><textarea name="hero_subtitle" rows="2">{{ old('hero_subtitle',$settings['hero_subtitle'] ?? $site['hero_subtitle']) }}</textarea></div>
     <div class="admin-field"><label>SEO page title</label><input name="seo_title" value="{{ old('seo_title',$settings['seo_title'] ?? $site['seo_title']) }}"></div>
     <div class="admin-field"><label>SEO description</label><textarea name="seo_description" rows="2">{{ old('seo_description',$settings['seo_description'] ?? $site['seo_description']) }}</textarea></div>
+    <h2 style="margin-top:24px">Footer content</h2>
+    <div class="form-grid">
+        <div class="admin-field"><label for="footer_tagline">Footer tagline</label><input id="footer_tagline" name="footer_tagline" value="{{ old('footer_tagline',$settings['footer_tagline'] ?? $site['footer_tagline']) }}" maxlength="160"></div>
+        <div class="admin-field"><label for="footer_note">Footer note</label><input id="footer_note" name="footer_note" value="{{ old('footer_note',$settings['footer_note'] ?? $site['footer_note']) }}" maxlength="160"></div>
+        <div class="admin-field"><label for="footer_note_url">Footer note URL (optional)</label><input type="url" id="footer_note_url" name="footer_note_url" value="{{ old('footer_note_url',$settings['footer_note_url'] ?? $site['footer_note_url']) }}" maxlength="2048" placeholder="https://example.com"></div>
+    </div>
     <button class="button">Save store settings</button>
 </form>
 <section class="admin-panel">

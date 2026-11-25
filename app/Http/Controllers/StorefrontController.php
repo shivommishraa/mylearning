@@ -9,6 +9,7 @@ use App\Models\Coupon;
 use App\Models\HomeSection;
 use App\Models\Product;
 use App\Models\Testimonial;
+use App\Models\WelcomePopup;
 use App\Support\StoreCatalogRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -53,6 +54,7 @@ class StorefrontController extends Controller
 
         return view('store.home', [
             'banners' => Banner::where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
+            'welcomePopup' => WelcomePopup::with(['images', 'buttons'])->where('is_enabled', true)->first(),
             'categories' => Category::where('is_active', true)->orderBy('sort_order')->get()
                 ->reject(fn (Category $category) => StoreCatalogRules::isRestricted($category->name.' '.$category->slug)),
             'sections' => $sections,

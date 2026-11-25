@@ -26,7 +26,10 @@ class EmailVerificationSettingsTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/settings')
             ->assertOk()
-            ->assertSee('Require email verification');
+            ->assertSee('Require email verification')
+            ->assertSee('Footer tagline')
+            ->assertSee('Footer note')
+            ->assertSee('Footer note URL (optional)');
 
         $response = $this->put('/admin/settings', [
             'business_name' => 'Test Store',
@@ -43,6 +46,9 @@ class EmailVerificationSettingsTest extends TestCase
             'seo_description' => '',
             'hero_title' => '',
             'hero_subtitle' => '',
+            'footer_tagline' => 'Everyday shopping, made simple.',
+            'footer_note' => 'Proudly serving Greater Noida',
+            'footer_note_url' => 'https://example.com/neighbourhood',
         ]);
 
         $response->assertRedirect('/admin/settings');
@@ -50,5 +56,22 @@ class EmailVerificationSettingsTest extends TestCase
             'key' => 'require_email_verification',
             'value' => '1',
         ]);
+        $this->assertDatabaseHas('site_settings', [
+            'key' => 'footer_tagline',
+            'value' => 'Everyday shopping, made simple.',
+        ]);
+        $this->assertDatabaseHas('site_settings', [
+            'key' => 'footer_note',
+            'value' => 'Proudly serving Greater Noida',
+        ]);
+        $this->assertDatabaseHas('site_settings', [
+            'key' => 'footer_note_url',
+            'value' => 'https://example.com/neighbourhood',
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Everyday shopping, made simple.')
+            ->assertSee('<a href="https://example.com/neighbourhood">Proudly serving Greater Noida</a>', false);
     }
 }

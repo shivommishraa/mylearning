@@ -107,4 +107,7 @@
     </section>
     @endif
     </div>
+    @if($welcomePopup)
+        @include('store.partials.welcome-popup', ['welcomePopup' => $welcomePopup])
+    @endif
 @endsection

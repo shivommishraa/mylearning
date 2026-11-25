@@ -7,6 +7,57 @@ window.Alpine = Alpine;
 
 Alpine.start();
 
+const pageLoader = document.querySelector('[data-page-loader]');
+if (pageLoader) {
+    let dismissed = false;
+    let fallbackTimer;
+    const dismissLoader = () => {
+        if (dismissed) {
+            return;
+        }
+
+        dismissed = true;
+        window.clearTimeout(fallbackTimer);
+        pageLoader.classList.add('is-hidden');
+        pageLoader.setAttribute('aria-hidden', 'true');
+        window.setTimeout(() => pageLoader.remove(), 450);
+    };
+
+    fallbackTimer = window.setTimeout(dismissLoader, 8000);
+    if (document.readyState === 'complete') {
+        window.setTimeout(dismissLoader, 120);
+    } else {
+        window.addEventListener('load', dismissLoader, { once: true });
+    }
+}
+
+const backToTopButton = document.querySelector('[data-back-to-top]');
+if (backToTopButton) {
+    let updateScheduled = false;
+    const updateVisibility = () => {
+        if (updateScheduled) {
+            return;
+        }
+
+        updateScheduled = true;
+        window.requestAnimationFrame(() => {
+            const isVisible = window.scrollY > 420;
+            backToTopButton.classList.toggle('is-visible', isVisible);
+            backToTopButton.setAttribute('aria-hidden', String(!isVisible));
+            backToTopButton.tabIndex = isVisible ? 0 : -1;
+            updateScheduled = false;
+        });
+    };
+
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    updateVisibility();
+    backToTopButton.addEventListener('click', () => {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+        backToTopButton.blur();
+    });
+}
+
 const liveSearchForm = document.querySelector('[data-live-search]');
 
 if (liveSearchForm) {
@@ -490,4 +541,123 @@ document.querySelectorAll('[data-banner-slider]').forEach((slider) => {
 
     updateToggleButton();
     startRotation();
+});
+
+document.querySelectorAll('[data-welcome-popup]').forEach((popup) => {
+    const dialog = popup.querySelector('[role="dialog"]');
+    const frequency = popup.dataset.displayFrequency;
+    const storageKey = `ssg-welcome-popup-${popup.dataset.popupId}-${popup.dataset.popupVersion}`;
+    let dismissalStorage = null;
+    let alreadyShown = false;
+
+    try {
+        dismissalStorage = frequency === 'once_per_session'
+            ? window.sessionStorage
+            : frequency === 'once_per_visitor'
+                ? window.localStorage
+                : null;
+        alreadyShown = dismissalStorage?.getItem(storageKey) === 'shown';
+    } catch (error) {
+        if (!(error instanceof DOMException)) {
+            throw error;
+        }
+        dismissalStorage = null;
+    }
+
+    if (alreadyShown) {
+        return;
+    }
+
+    const closeButton = popup.querySelector('[data-welcome-close]');
+    const focusableSelector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    let previousFocus;
+    let showTimer;
+
+    const closePopup = () => {
+        window.clearTimeout(showTimer);
+        popup.hidden = true;
+        popup.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('welcome-popup-open');
+        document.removeEventListener('keydown', handleKeydown);
+        previousFocus?.focus();
+    };
+
+    const handleKeydown = (event) => {
+        if (event.key === 'Escape') {
+            closePopup();
+            return;
+        }
+
+        if (event.key !== 'Tab') {
+            return;
+        }
+
+        const focusable = Array.from(dialog.querySelectorAll(focusableSelector));
+        if (focusable.length === 0) {
+            event.preventDefault();
+            dialog.focus();
+            return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    };
+
+    const openPopup = () => {
+        previousFocus = document.activeElement;
+        popup.hidden = false;
+        popup.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('welcome-popup-open');
+        document.addEventListener('keydown', handleKeydown);
+        (popup.querySelector(focusableSelector) || dialog).focus();
+        try {
+            dismissalStorage?.setItem(storageKey, 'shown');
+        } catch (error) {
+            if (!(error instanceof DOMException)) {
+                throw error;
+            }
+        }
+    };
+
+    popup.addEventListener('click', (event) => {
+        if (event.target === popup) {
+            closePopup();
+        }
+    });
+
+    closeButton?.addEventListener('click', closePopup);
+
+    const images = Array.from(popup.querySelectorAll('[data-welcome-image]'));
+    const imageDots = Array.from(popup.querySelectorAll('[data-welcome-image-dot]'));
+    if (images.length > 1) {
+        let activeImage = 0;
+        const showImage = (index) => {
+            activeImage = (index + images.length) % images.length;
+            images.forEach((image, imageIndex) => {
+                const isActive = imageIndex === activeImage;
+                image.classList.toggle('is-active', isActive);
+                image.setAttribute('aria-hidden', String(!isActive));
+            });
+            imageDots.forEach((dot, dotIndex) => {
+                const isActive = dotIndex === activeImage;
+                dot.classList.toggle('is-active', isActive);
+                dot.setAttribute('aria-current', String(isActive));
+            });
+        };
+
+        popup.querySelector('[data-welcome-image-prev]')?.addEventListener('click', () => showImage(activeImage - 1));
+        popup.querySelector('[data-welcome-image-next]')?.addEventListener('click', () => showImage(activeImage + 1));
+        imageDots.forEach((dot) => {
+            dot.addEventListener('click', () => showImage(Number(dot.dataset.welcomeImageDot)));
+        });
+    }
+
+    showTimer = window.setTimeout(openPopup, Number(popup.dataset.displayDelay || 0) * 1000);
 });

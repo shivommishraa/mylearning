@@ -24,6 +24,7 @@
             @can('customers.view')<a class="{{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" href="{{ route('admin.customers.index') }}">♙ &nbsp; Customers</a>@endcan
             @can('enquiries.view')<a class="{{ request()->routeIs('admin.enquiries.*') ? 'active' : '' }}" href="{{ route('admin.enquiries.index') }}">✉ &nbsp; Enquiries</a>@endcan
             @can('content.view')<a class="{{ request()->routeIs('admin.sections.*') ? 'active' : '' }}" href="{{ route('admin.sections.index') }}">▤ &nbsp; Homepage collections</a><a class="{{ request()->routeIs('admin.banners.*') ? 'active' : '' }}" href="{{ route('admin.banners.index') }}">▧ &nbsp; Homepage banners</a><a class="{{ request()->routeIs('admin.testimonials.*') ? 'active' : '' }}" href="{{ route('admin.testimonials.index') }}">♡ &nbsp; Testimonials</a>@endcan
+            @can('welcome_popup.view')<a class="{{ request()->routeIs('admin.welcome-popup.*') ? 'active' : '' }}" href="{{ route('admin.welcome-popup.index') }}">✧ &nbsp; Welcome popup</a>@endcan
             @can('pages.view')<a class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}" href="{{ route('admin.pages.index') }}">▤ &nbsp; Content pages</a>@endcan
             @can('brands.view')<a class="{{ request()->routeIs('admin.brands.*') ? 'active' : '' }}" href="{{ route('admin.brands.index') }}">◉ &nbsp; Brands</a>@endcan
             @can('menus.view')<a class="{{ request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.menus.index') }}">☰ &nbsp; Navigation menus</a>@endcan

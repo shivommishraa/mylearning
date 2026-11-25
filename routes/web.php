@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductDisplaySettingsController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\WelcomePopupController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContentPageController;
@@ -125,6 +126,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin|Ad
 
     Route::get('/settings', [SettingsController::class, 'edit'])->middleware('permission:settings.view')->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->middleware('permission:settings.edit')->name('settings.update');
+
+    Route::get('/welcome-popup', [WelcomePopupController::class, 'index'])->middleware('permission:welcome_popup.view')->name('welcome-popup.index');
+    Route::post('/welcome-popup', [WelcomePopupController::class, 'store'])->middleware(['permission:welcome_popup.view', 'permission:welcome_popup.create'])->name('welcome-popup.store');
+    Route::put('/welcome-popup', [WelcomePopupController::class, 'update'])->middleware(['permission:welcome_popup.view', 'permission:welcome_popup.edit'])->name('welcome-popup.update');
+    Route::put('/welcome-popup/display', [WelcomePopupController::class, 'updateDisplaySettings'])->middleware(['permission:welcome_popup.view', 'permission:welcome_popup.manage'])->name('welcome-popup.display');
+    Route::delete('/welcome-popup', [WelcomePopupController::class, 'destroy'])->middleware(['permission:welcome_popup.view', 'permission:welcome_popup.delete'])->name('welcome-popup.destroy');
 
     Route::middleware('role:Super Admin')->group(function () {
         Route::get('/admins', [AdminUserController::class, 'index'])->middleware('permission:admins.view')->name('admins.index');

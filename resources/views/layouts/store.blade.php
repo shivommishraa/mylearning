@@ -32,6 +32,14 @@
     @stack('head')
 </head>
 <body>
+    <div class="store-loader" data-page-loader role="status" aria-live="polite">
+        <div class="store-loader-content">
+            <span class="store-loader-icon" aria-hidden="true">S</span>
+            <strong>SSG MART</strong>
+            <p>Getting your essentials ready</p>
+            <span class="store-loader-progress" aria-hidden="true"><span></span></span>
+        </div>
+    </div>
     <div class="announcement">{{ $site['announcement_text'] }} <strong>· Free delivery over ₹{{ number_format((float) $site['free_delivery_minimum']) }}</strong></div>
     <header class="header">
         <div class="wrap header-main">
@@ -77,8 +85,11 @@
             <div><h3>A few helpful links</h3><div class="footer-links"><a href="{{ auth()->check() ? route('account') : route('login') }}">Your account</a><a href="{{ route('cart.index') }}">Your basket</a>@foreach(($navigationItems['footer'] ?? collect()) as $item)<a href="{{ $item->url }}">{{ $item->label }}</a>@endforeach @foreach($publishedPages as $page)<a href="{{ route('pages.show',$page->slug) }}">{{ $page->title }}</a>@endforeach</div></div>
             <div><h3>We're easy to reach</h3><div class="footer-links"><a href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}">Call {{ $site['phone'] }}</a><a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a><span>Greater Noida, Uttar Pradesh</span></div></div>
         </div>
-        <div class="wrap footer-bottom"><span>© {{ now()->year }} {{ $site['business_name'] }}. Daily essentials, close to home.</span><span>Made for your neighbourhood · India</span></div>
+        <div class="wrap footer-bottom"><span>© {{ now()->year }} {{ $site['business_name'] }}. {{ $site['footer_tagline'] }}</span><span>@if(filled($site['footer_note_url'] ?? null))<a href="{{ $site['footer_note_url'] }}">{{ $site['footer_note'] }}</a>@else{{ $site['footer_note'] }}@endif</span></div>
     </footer>
+    <button class="back-to-top" type="button" data-back-to-top aria-label="Scroll to top" aria-hidden="true" tabindex="-1">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     @stack('scripts')
 </body>
 </html>

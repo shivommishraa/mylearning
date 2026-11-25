@@ -29,6 +29,9 @@ class SettingsController extends Controller
         'seo_description' => ['nullable', 'string', 'max:320'],
         'hero_title' => ['nullable', 'string', 'max:180'],
         'hero_subtitle' => ['nullable', 'string', 'max:500'],
+        'footer_tagline' => ['nullable', 'string', 'max:160'],
+        'footer_note' => ['nullable', 'string', 'max:160'],
+        'footer_note_url' => ['nullable', 'url', 'max:2048'],
     ];
 
     public function edit(): View
@@ -41,6 +44,12 @@ class SettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate(self::FIELDS);
+
+        foreach (['footer_tagline', 'footer_note', 'footer_note_url'] as $field) {
+            if (array_key_exists($field, $validated)) {
+                $validated[$field] ??= '';
+            }
+        }
 
         foreach (['announcement_text', 'seo_title', 'seo_description', 'hero_title', 'hero_subtitle'] as $field) {
             if (StoreCatalogRules::isRestricted($validated[$field] ?? '')) {
