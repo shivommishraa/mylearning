@@ -16,6 +16,6 @@ trait HasStoreImage
             return $this->image;
         }
 
-        return asset('storage/'.$this->image);
+        return asset('media/'.$this->image);
     }
 }

@@ -20,11 +20,13 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContentPageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicImageController;
 use App\Http\Controllers\StorefrontController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StorefrontController::class, 'home'])->name('home');
+Route::get('/media/{path}', PublicImageController::class)->where('path', '.*')->name('media.show');
 Route::get('/shop', [StorefrontController::class, 'shop'])->name('shop.index');
 Route::get('/search/suggestions', [StorefrontController::class, 'suggestions'])->name('search.suggest');
 Route::get('/products/{product:slug}', [StorefrontController::class, 'product'])->name('products.show');

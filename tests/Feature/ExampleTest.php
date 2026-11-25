@@ -176,8 +176,15 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertStreamedContent('image contents');
 
+        $this->get('/media/banners/banner.png')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png')
+            ->assertStreamedContent('image contents');
+
         $this->get('/storage/banners/missing.png')->assertNotFound();
         $this->get('/storage/../.env')->assertNotFound();
+        $this->get('/media/products/../.env')->assertNotFound();
+        $this->get('/media/private/document.png')->assertNotFound();
     }
 
     public function test_product_storefront_settings_hide_prices_and_prevent_cart_additions(): void
