@@ -1,5 +1,5 @@
 <article class="product-card">
-    <div class="product-photo">
+    <div class="product-photo{{ $product->image_url ? ' has-product-image' : '' }}">
         <a href="{{ route('products.show', $product->slug) }}" aria-label="View {{ $product->name }}">
             @include('components.product-art', ['product' => $product])
             @if($product->image_url)
