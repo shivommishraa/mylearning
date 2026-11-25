@@ -42,7 +42,7 @@ img{max-width:100%;display:block}
 .header-icon{display:inline-grid;width:20px;height:20px;place-items:center;font-size:19px;color:var(--green)}
 .header-icon svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .cart-count{background:var(--lime);border-radius:20px;padding:1px 7px;font-size:11px;margin-left:-4px}
-.nav{min-height:47px;height:auto;border-top:1px solid #f1f3f0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px clamp(4px,1vw,14px);padding:7px 0;color:#405148;font-size:13px;font-weight:600}
+.nav{min-height:47px;height:auto;border-top:1px solid #f1f3f0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px clamp(4px,1vw,14px);padding:7px 0;color:#405148;font-size:13px;font-weight:600}
 .nav>a,.nav-group>a{flex:0 0 auto;padding:9px 10px;border-radius:9px;color:inherit;line-height:1.25;white-space:nowrap;transition:background .18s ease,color .18s ease,transform .18s ease}
 .nav>a:hover,.nav-group>a:hover,.nav-group.is-open>a{background:#f2f7f0;color:var(--green);transform:translateY(-1px)}
 .nav a:hover,.text-link:hover{color:var(--green)}
