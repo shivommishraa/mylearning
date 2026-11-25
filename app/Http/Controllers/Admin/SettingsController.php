@@ -23,7 +23,6 @@ class SettingsController extends Controller
         'whatsapp' => ['nullable', 'string', 'max:30'],
         'delivery_fee' => ['required', 'numeric', 'min:0', 'max:10000'],
         'free_delivery_minimum' => ['required', 'numeric', 'min:0', 'max:100000'],
-        'require_email_verification' => ['sometimes', 'boolean'],
         'announcement_text' => ['required', 'string', 'max:160'],
         'seo_title' => ['nullable', 'string', 'max:160'],
         'seo_description' => ['nullable', 'string', 'max:320'],
@@ -73,5 +72,26 @@ class SettingsController extends Controller
         ]);
 
         return back()->with('success', 'Website settings saved.');
+    }
+
+    public function updateEmailVerification(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'require_email_verification' => ['required', 'boolean'],
+        ]);
+        $enabled = (bool) $validated['require_email_verification'];
+
+        SiteSetting::updateOrCreate(
+            ['key' => 'require_email_verification'],
+            ['value' => $enabled ? '1' : '0', 'group' => 'general'],
+        );
+
+        ActivityLog::create([
+            'user_id' => auth()->id(),
+            'action' => 'settings.email_verification.updated',
+            'properties' => ['enabled' => $enabled],
+        ]);
+
+        return back()->with('success', 'Customer email verification setting saved.');
     }
 }

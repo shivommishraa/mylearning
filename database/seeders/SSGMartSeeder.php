@@ -37,6 +37,8 @@ class SSGMartSeeder extends Seeder
         }
         Permission::firstOrCreate(['name' => 'products.settings', 'guard_name' => 'web']);
         Permission::firstOrCreate(['name' => 'welcome_popup.manage', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'email_verification.view', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'email_verification.edit', 'guard_name' => 'web']);
 
         $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
         $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);

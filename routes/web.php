@@ -103,6 +103,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin|Ad
     Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->middleware('permission:coupons.delete')->name('coupons.destroy');
 
     Route::get('/customers', [CustomerController::class, 'index'])->middleware('permission:customers.view')->name('customers.index');
+    Route::get('/customers/create', [CustomerController::class, 'create'])->middleware('permission:customers.create')->name('customers.create');
+    Route::post('/customers', [CustomerController::class, 'store'])->middleware('permission:customers.create')->name('customers.store');
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->middleware('permission:customers.view')->name('customers.show');
+    Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->middleware('permission:customers.edit')->name('customers.edit');
+    Route::put('/customers/{customer}', [CustomerController::class, 'update'])->middleware('permission:customers.edit')->name('customers.update');
+    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->middleware('permission:customers.delete')->name('customers.destroy');
     Route::get('/enquiries', [CustomerController::class, 'enquiries'])->middleware('permission:enquiries.view')->name('enquiries.index');
     Route::patch('/enquiries/{enquiry}/read', [CustomerController::class, 'markEnquiryRead'])->middleware('permission:enquiries.edit')->name('enquiries.read');
     Route::get('/activity', [CustomerController::class, 'activity'])->middleware('permission:activity.view')->name('activity.index');
@@ -126,6 +132,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:Super Admin|Ad
 
     Route::get('/settings', [SettingsController::class, 'edit'])->middleware('permission:settings.view')->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->middleware('permission:settings.edit')->name('settings.update');
+    Route::put('/settings/email-verification', [SettingsController::class, 'updateEmailVerification'])->middleware('permission:email_verification.edit')->name('settings.email-verification.update');
 
     Route::get('/welcome-popup', [WelcomePopupController::class, 'index'])->middleware('permission:welcome_popup.view')->name('welcome-popup.index');
     Route::post('/welcome-popup', [WelcomePopupController::class, 'store'])->middleware(['permission:welcome_popup.view', 'permission:welcome_popup.create'])->name('welcome-popup.store');
